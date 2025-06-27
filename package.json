@@ -1,0 +1,60 @@
+{
+  "name": "user-tools-mcp",
+  "version": "2.0.0",
+  "description": "UserTools - MCP server com ferramentas para automação web, GitHub e Gemini integration",
+  "type": "module",
+  "main": "build/index.js",
+  "bin": {
+    "user-tools": "build/index.js"
+  },
+  "files": [
+    "build/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phiz/user-tools.git"
+  },
+  "author": "Phiz",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node build/index.js",
+    "pretest": "npm run build",
+    "test": "INTEGRATION_TEST_FILE_DIR=integration-tests/output NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@modelcontextprotocol/server-puppeteer": "^2025.5.12",
+    "@octokit/rest": "^22.0.0",
+    "@types/puppeteer": "^5.4.7",
+    "dotenv": "^16.5.0",
+    "mem0ai": "^2.1.30",
+    "puppeteer": "^24.10.0",
+    "zod": "^3.25.56"
+  },
+  "devDependencies": {
+    "@jest/globals": "^30.0.0-beta.3",
+    "@types/eventsource": "^1.1.15",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^20.11.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.3.4",
+    "typescript": "^5.8.3"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "gemini",
+    "puppeteer",
+    "web-automation",
+    "browser-automation"
+  ],
+  "license": "MIT"
+}

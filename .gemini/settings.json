@@ -1,0 +1,12 @@
+{
+  "telemetry": {
+    "enabled": false
+  },
+  "mcpServers": {
+    "userTools": {
+      "command": "node",
+      "args": ["build/index.js"],
+      "cwd": "."
+    }
+  }
+}
