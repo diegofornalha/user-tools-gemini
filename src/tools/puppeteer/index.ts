@@ -7,7 +7,7 @@
 /**
  * Puppeteer Tools Module
  *
- * Ferramentas de automação web usando Puppeteer
+ * Ferramentas de automação web usando Puppeteer - VERSÃO COMPLETA
  */
 
 import puppeteer, { Browser, Page } from 'puppeteer';
@@ -23,7 +23,9 @@ import {
   ErrorCode,
 } from '../../types.js';
 
-// Schemas de validação
+// ================== SCHEMAS DE VALIDAÇÃO ==================
+
+// Schemas básicos
 export const NavigateSchema = z.object({
   url: z.string().url('URL inválida fornecida'),
 });
@@ -42,7 +44,7 @@ export const TypeSchema = z.object({
   text: z.string(),
 });
 
-// 🆕 Novos Schemas para ferramentas da imagem
+// Schemas da Fase 1 (já implementados)
 export const FillSchema = z.object({
   selector: z.string().min(1, 'Seletor CSS é obrigatório'),
   value: z.string(),
@@ -61,38 +63,78 @@ export const EvaluateSchema = z.object({
   script: z.string().min(1, 'Script JavaScript é obrigatório'),
 });
 
-// Estado do browser
+// 🆕 Schemas da Fase 2 - Navegação Avançada
+export const WaitForElementSchema = z.object({
+  selector: z.string().min(1, 'Seletor CSS é obrigatório'),
+  timeout: z.number().optional().default(30000),
+  visible: z.boolean().optional().default(true),
+});
+
+export const ScrollSchema = z.object({
+  direction: z.enum(['up', 'down', 'left', 'right']).optional().default('down'),
+  amount: z.number().optional().default(500),
+  selector: z.string().optional(), // Para scroll em elemento específico
+});
+
+export const ReloadSchema = z.object({
+  waitUntil: z.enum(['load', 'domcontentloaded', 'networkidle0', 'networkidle2']).optional().default('networkidle2'),
+});
+
+// 🆕 Schemas da Fase 3 - Extração Avançada
+export const GetTextSchema = z.object({
+  selector: z.string().min(1, 'Seletor CSS é obrigatório'),
+  trim: z.boolean().optional().default(true),
+});
+
+export const GetAttributeSchema = z.object({
+  selector: z.string().min(1, 'Seletor CSS é obrigatório'),
+  attribute: z.string().min(1, 'Nome do atributo é obrigatório'),
+});
+
+// 🆕 Schemas da Fase 4 - Gestão de Abas
+export const SwitchTabSchema = z.object({
+  tabIndex: z.number().min(0, 'Índice da aba deve ser >= 0'),
+});
+
+export const CloseTabSchema = z.object({
+  tabIndex: z.number().optional(), // Se não fornecido, fecha aba atual
+});
+
+// ================== ESTADO DO BROWSER ==================
+
 let browser: Browser | null = null;
 let page: Page | null = null;
+let pages: Page[] = [];
 let lastActivity = Date.now();
 
 // Configurações
 const BROWSER_TIMEOUT = 5 * 60 * 1000; // 5 minutos
 const DEFAULT_VIEWPORT = { width: 1280, height: 720 };
 
-// Configurações do browser - simplificadas como no reference server
 const BROWSER_CONFIG = {
   headless: false,
 };
 
 /**
- * Garante que o browser está inicializado
+ * Garante que o browser está inicializado e atualiza lista de páginas
  */
 async function ensureBrowser(): Promise<void> {
   if (!browser || !browser.isConnected()) {
-    // Usa configuração simples como no reference server
     browser = await puppeteer.launch(BROWSER_CONFIG);
 
-    // Adiciona listener para fechar gracefully
     browser.on('disconnected', () => {
       browser = null;
       page = null;
+      pages = [];
     });
   }
 
+  // Atualiza lista de páginas
+  pages = await browser.pages();
+
   if (!page || page.isClosed()) {
-    const pages = await browser.pages();
     page = pages[0] || (await browser.newPage());
+    await page.setViewport(DEFAULT_VIEWPORT);
   }
 
   lastActivity = Date.now();
@@ -107,11 +149,13 @@ export function startBrowserCleanup() {
       await browser.close();
       browser = null;
       page = null;
+      pages = [];
     }
-  }, 60000); // Verifica a cada minuto
+  }, 60000);
 }
 
-// Handlers das ferramentas existentes
+// ================== HANDLERS - BÁSICOS ==================
+
 export async function handleNavigate(params: NavigateParams) {
   const validated = NavigateSchema.parse(params);
 
@@ -140,7 +184,7 @@ export async function handleScreenshot(params: ScreenshotParams) {
   }
 
   await page.screenshot({
-    path: path as any, // Type assertion necessária para compatibilidade com Puppeteer
+    path: path as any,
     fullPage: validated.fullPage,
   });
 
@@ -194,21 +238,23 @@ export async function handleNewTab(params: NavigateParams) {
   if (!browser)
     throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Browser não inicializado');
 
-  // Cria nova aba
   const newPage = await browser.newPage();
   await newPage.setViewport(DEFAULT_VIEWPORT);
   await newPage.goto(validated.url, { waitUntil: 'networkidle2' });
-
-  // Foca na nova aba
   await newPage.bringToFront();
 
+  // Atualiza página atual e lista
+  page = newPage;
+  pages = await browser.pages();
+
   return successResponse(
-    { url: validated.url },
+    { url: validated.url, tabIndex: pages.length - 1 },
     `Nova aba aberta com ${validated.url}`,
   );
 }
 
-// 🆕 Novos Handlers para ferramentas da imagem
+// ================== HANDLERS - FASE 1 ==================
+
 export async function handleFill(params: { selector: string; value: string }) {
   const validated = FillSchema.parse(params);
 
@@ -216,7 +262,6 @@ export async function handleFill(params: { selector: string; value: string }) {
   if (!page)
     throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Página não inicializada');
 
-  // Limpa campo antes de preencher
   await page.click(validated.selector, { clickCount: 3 });
   await page.type(validated.selector, validated.value);
 
@@ -271,8 +316,309 @@ export async function handleEvaluate(params: { script: string }) {
   );
 }
 
-// Metadados das ferramentas Puppeteer - Expandido
+// ================== HANDLERS - FASE 2: NAVEGAÇÃO AVANÇADA ==================
+
+export async function handleWaitForElement(params: { selector: string; timeout?: number; visible?: boolean }) {
+  const validated = WaitForElementSchema.parse(params);
+
+  await ensureBrowser();
+  if (!page)
+    throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Página não inicializada');
+
+  await page.waitForSelector(validated.selector, {
+    timeout: validated.timeout,
+    visible: validated.visible,
+  });
+
+  return successResponse(
+    { selector: validated.selector, timeout: validated.timeout },
+    `Elemento encontrado: ${validated.selector}`,
+  );
+}
+
+export async function handleScroll(params: { direction?: string; amount?: number; selector?: string }) {
+  const validated = ScrollSchema.parse(params);
+
+  await ensureBrowser();
+  if (!page)
+    throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Página não inicializada');
+
+  if (validated.selector) {
+    // Scroll em elemento específico
+    await page.evaluate((selector, direction, amount) => {
+      const element = document.querySelector(selector);
+      if (element) {
+        switch (direction) {
+          case 'up':
+            element.scrollTop -= amount;
+            break;
+          case 'down':
+            element.scrollTop += amount;
+            break;
+          case 'left':
+            element.scrollLeft -= amount;
+            break;
+          case 'right':
+            element.scrollLeft += amount;
+            break;
+        }
+      }
+    }, validated.selector, validated.direction, validated.amount);
+  } else {
+    // Scroll da página
+    await page.evaluate((direction, amount) => {
+      switch (direction) {
+        case 'up':
+          window.scrollBy(0, -amount);
+          break;
+        case 'down':
+          window.scrollBy(0, amount);
+          break;
+        case 'left':
+          window.scrollBy(-amount, 0);
+          break;
+        case 'right':
+          window.scrollBy(amount, 0);
+          break;
+      }
+    }, validated.direction, validated.amount);
+  }
+
+  return successResponse(
+    { direction: validated.direction, amount: validated.amount, selector: validated.selector },
+    `Scroll realizado: ${validated.direction} (${validated.amount}px)`,
+  );
+}
+
+export async function handleGoBack() {
+  await ensureBrowser();
+  if (!page)
+    throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Página não inicializada');
+
+  await page.goBack({ waitUntil: 'networkidle2' });
+  const url = page.url();
+
+  return successResponse(
+    { url },
+    `Voltou para página anterior: ${url}`,
+  );
+}
+
+export async function handleReload(params: { waitUntil?: string } = {}) {
+  const validated = ReloadSchema.parse(params);
+
+  await ensureBrowser();
+  if (!page)
+    throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Página não inicializada');
+
+  await page.reload({ waitUntil: validated.waitUntil as any });
+  const url = page.url();
+
+  return successResponse(
+    { url, waitUntil: validated.waitUntil },
+    `Página recarregada: ${url}`,
+  );
+}
+
+// ================== HANDLERS - FASE 3: EXTRAÇÃO AVANÇADA ==================
+
+export async function handleGetText(params: { selector: string; trim?: boolean }) {
+  const validated = GetTextSchema.parse(params);
+
+  await ensureBrowser();
+  if (!page)
+    throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Página não inicializada');
+
+  const element = await page.$(validated.selector);
+  if (!element) {
+    throw new MCPError(ErrorCode.INTERNAL_ERROR, `Elemento não encontrado: ${validated.selector}`);
+  }
+
+  let text = await element.evaluate(el => el.textContent);
+  if (validated.trim && text) {
+    text = text.trim();
+  }
+
+  return successResponse(
+    { selector: validated.selector, text, trim: validated.trim },
+    `Texto extraído de ${validated.selector}`,
+  );
+}
+
+export async function handleGetAttribute(params: { selector: string; attribute: string }) {
+  const validated = GetAttributeSchema.parse(params);
+
+  await ensureBrowser();
+  if (!page)
+    throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Página não inicializada');
+
+  const element = await page.$(validated.selector);
+  if (!element) {
+    throw new MCPError(ErrorCode.INTERNAL_ERROR, `Elemento não encontrado: ${validated.selector}`);
+  }
+
+  const value = await element.evaluate((el, attr) => el.getAttribute(attr), validated.attribute);
+
+  return successResponse(
+    { selector: validated.selector, attribute: validated.attribute, value },
+    `Atributo ${validated.attribute} extraído de ${validated.selector}`,
+  );
+}
+
+export async function handleGetTitle() {
+  await ensureBrowser();
+  if (!page)
+    throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Página não inicializada');
+
+  const title = await page.title();
+
+  return successResponse(
+    { title },
+    `Título da página: ${title}`,
+  );
+}
+
+export async function handleGetUrl() {
+  await ensureBrowser();
+  if (!page)
+    throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Página não inicializada');
+
+  const url = page.url();
+
+  return successResponse(
+    { url },
+    `URL atual: ${url}`,
+  );
+}
+
+// ================== HANDLERS - FASE 4: GESTÃO DE ABAS ==================
+
+export async function handleListTabs() {
+  await ensureBrowser();
+  if (!browser)
+    throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Browser não inicializado');
+
+  pages = await browser.pages();
+  
+  const tabs = await Promise.all(
+    pages.map(async (p, index) => ({
+      index,
+      url: p.url(),
+      title: await p.title(),
+      active: p === page,
+    }))
+  );
+
+  return successResponse(
+    { tabs, count: tabs.length },
+    `${tabs.length} abas abertas`,
+  );
+}
+
+export async function handleSwitchTab(params: { tabIndex: number }) {
+  const validated = SwitchTabSchema.parse(params);
+
+  await ensureBrowser();
+  if (!browser)
+    throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Browser não inicializado');
+
+  pages = await browser.pages();
+  
+  if (validated.tabIndex >= pages.length) {
+    throw new MCPError(ErrorCode.INTERNAL_ERROR, `Aba ${validated.tabIndex} não existe. Total: ${pages.length}`);
+  }
+
+  const targetPage = pages[validated.tabIndex];
+  if (!targetPage) {
+    throw new MCPError(ErrorCode.INTERNAL_ERROR, `Aba ${validated.tabIndex} não encontrada`);
+  }
+
+  page = targetPage;
+  await page.bringToFront();
+
+  return successResponse(
+    { tabIndex: validated.tabIndex, url: page.url(), title: await page.title() },
+    `Alternado para aba ${validated.tabIndex}`,
+  );
+}
+
+export async function handleCloseTab(params: { tabIndex?: number } = {}) {
+  const validated = CloseTabSchema.parse(params);
+
+  await ensureBrowser();
+  if (!browser)
+    throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Browser não inicializado');
+
+  pages = await browser.pages();
+
+  let targetPage: Page;
+  let targetIndex: number;
+
+  if (validated.tabIndex !== undefined) {
+    if (validated.tabIndex >= pages.length) {
+      throw new MCPError(ErrorCode.INTERNAL_ERROR, `Aba ${validated.tabIndex} não existe. Total: ${pages.length}`);
+    }
+    const selectedPage = pages[validated.tabIndex];
+    if (!selectedPage) {
+      throw new MCPError(ErrorCode.INTERNAL_ERROR, `Aba ${validated.tabIndex} não encontrada`);
+    }
+    targetPage = selectedPage;
+    targetIndex = validated.tabIndex;
+  } else {
+    if (!page) {
+      throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Nenhuma aba ativa para fechar');
+    }
+    targetPage = page;
+    targetIndex = pages.indexOf(page);
+  }
+
+  await targetPage.close();
+
+  // Atualiza lista e página atual
+  pages = await browser.pages();
+  if (pages.length > 0) {
+    const newPage = pages[Math.min(targetIndex, pages.length - 1)];
+    if (newPage) {
+      page = newPage;
+      await page.bringToFront();
+    } else {
+      page = null;
+    }
+  } else {
+    page = null;
+  }
+
+  return successResponse(
+    { closedTabIndex: targetIndex, remainingTabs: pages.length },
+    `Aba ${targetIndex} fechada. ${pages.length} abas restantes`,
+  );
+}
+
+export async function handleDuplicateTab() {
+  await ensureBrowser();
+  if (!browser || !page)
+    throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Browser/página não inicializada');
+
+  const currentUrl = page.url();
+  const newPage = await browser.newPage();
+  await newPage.setViewport(DEFAULT_VIEWPORT);
+  await newPage.goto(currentUrl, { waitUntil: 'networkidle2' });
+  await newPage.bringToFront();
+
+  // Atualiza página atual e lista
+  page = newPage;
+  pages = await browser.pages();
+
+  return successResponse(
+    { originalUrl: currentUrl, newTabIndex: pages.length - 1 },
+    `Aba duplicada: ${currentUrl}`,
+  );
+}
+
+// ================== METADADOS DAS FERRAMENTAS ==================
+
 export const puppeteerTools = [
+  // BÁSICAS
   {
     name: 'puppeteer_navigate',
     description: 'Navigate to a URL',
@@ -291,11 +637,7 @@ export const puppeteerTools = [
       type: 'object',
       properties: {
         path: { type: 'string', description: 'Path to save the screenshot' },
-        fullPage: {
-          type: 'boolean',
-          description: 'Capture full page',
-          default: false,
-        },
+        fullPage: { type: 'boolean', description: 'Capture full page', default: false },
       },
       required: ['path'],
     },
@@ -306,10 +648,7 @@ export const puppeteerTools = [
     inputSchema: {
       type: 'object',
       properties: {
-        selector: {
-          type: 'string',
-          description: 'CSS selector of element to click',
-        },
+        selector: { type: 'string', description: 'CSS selector of element to click' },
       },
       required: ['selector'],
     },
@@ -326,7 +665,24 @@ export const puppeteerTools = [
       required: ['selector', 'text'],
     },
   },
-  // 🆕 Nova ferramenta: Fill
+  {
+    name: 'puppeteer_get_content',
+    description: 'Get the HTML content of the current page',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'puppeteer_new_tab',
+    description: 'Open URL in a new browser tab',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        url: { type: 'string', description: 'URL to open in new tab' },
+      },
+      required: ['url'],
+    },
+  },
+
+  // FASE 1: INTERAÇÃO AVANÇADA
   {
     name: 'puppeteer_fill',
     description: 'Fill an input field (clears first then types)',
@@ -339,7 +695,6 @@ export const puppeteerTools = [
       required: ['selector', 'value'],
     },
   },
-  // 🆕 Nova ferramenta: Select
   {
     name: 'puppeteer_select',
     description: 'Select an option from a dropdown',
@@ -352,7 +707,6 @@ export const puppeteerTools = [
       required: ['selector', 'value'],
     },
   },
-  // 🆕 Nova ferramenta: Hover
   {
     name: 'puppeteer_hover',
     description: 'Hover over an element',
@@ -364,7 +718,6 @@ export const puppeteerTools = [
       required: ['selector'],
     },
   },
-  // 🆕 Nova ferramenta: Evaluate
   {
     name: 'puppeteer_evaluate',
     description: 'Execute JavaScript code in the page context',
@@ -376,23 +729,115 @@ export const puppeteerTools = [
       required: ['script'],
     },
   },
+
+  // FASE 2: NAVEGAÇÃO AVANÇADA  
   {
-    name: 'puppeteer_get_content',
-    description: 'Get the HTML content of the current page',
-    inputSchema: {
-      type: 'object',
-      properties: {},
-    },
-  },
-  {
-    name: 'puppeteer_new_tab',
-    description: 'Open URL in a new browser tab',
+    name: 'puppeteer_wait_for_element',
+    description: 'Wait for an element to appear on the page',
     inputSchema: {
       type: 'object',
       properties: {
-        url: { type: 'string', description: 'URL to open in new tab' },
+        selector: { type: 'string', description: 'CSS selector to wait for' },
+        timeout: { type: 'number', description: 'Timeout in milliseconds', default: 30000 },
+        visible: { type: 'boolean', description: 'Wait for element to be visible', default: true },
       },
-      required: ['url'],
+      required: ['selector'],
     },
+  },
+  {
+    name: 'puppeteer_scroll',
+    description: 'Scroll the page or a specific element',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        direction: { type: 'string', enum: ['up', 'down', 'left', 'right'], description: 'Scroll direction', default: 'down' },
+        amount: { type: 'number', description: 'Amount to scroll in pixels', default: 500 },
+        selector: { type: 'string', description: 'CSS selector of element to scroll (optional)' },
+      },
+    },
+  },
+  {
+    name: 'puppeteer_go_back',
+    description: 'Go back to the previous page',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'puppeteer_reload',
+    description: 'Reload the current page',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        waitUntil: { type: 'string', enum: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2'], description: 'When to consider reload complete', default: 'networkidle2' },
+      },
+    },
+  },
+
+  // FASE 3: EXTRAÇÃO AVANÇADA
+  {
+    name: 'puppeteer_get_text',
+    description: 'Get text content from an element',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        selector: { type: 'string', description: 'CSS selector of element' },
+        trim: { type: 'boolean', description: 'Trim whitespace', default: true },
+      },
+      required: ['selector'],
+    },
+  },
+  {
+    name: 'puppeteer_get_attribute',
+    description: 'Get an attribute value from an element',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        selector: { type: 'string', description: 'CSS selector of element' },
+        attribute: { type: 'string', description: 'Attribute name to get' },
+      },
+      required: ['selector', 'attribute'],
+    },
+  },
+  {
+    name: 'puppeteer_get_title',
+    description: 'Get the title of the current page',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'puppeteer_get_url',
+    description: 'Get the URL of the current page',
+    inputSchema: { type: 'object', properties: {} },
+  },
+
+  // FASE 4: GESTÃO DE ABAS
+  {
+    name: 'puppeteer_list_tabs',
+    description: 'List all open browser tabs',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'puppeteer_switch_tab',
+    description: 'Switch to a specific tab by index',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        tabIndex: { type: 'number', description: 'Index of tab to switch to (0-based)' },
+      },
+      required: ['tabIndex'],
+    },
+  },
+  {
+    name: 'puppeteer_close_tab',
+    description: 'Close a specific tab or current tab',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        tabIndex: { type: 'number', description: 'Index of tab to close (optional, defaults to current tab)' },
+      },
+    },
+  },
+  {
+    name: 'puppeteer_duplicate_tab',
+    description: 'Duplicate the current tab',
+    inputSchema: { type: 'object', properties: {} },
   },
 ];
