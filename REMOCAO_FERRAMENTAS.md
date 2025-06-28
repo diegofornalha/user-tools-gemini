@@ -240,7 +240,7 @@ node startup.cjs
 
 **Seções removidas:**
 
-````markdown
+```markdown
 ❌ #### **Categoria Utilitários (1 ferramenta):**
 ❌ `json
 ❌ [
@@ -252,7 +252,7 @@ node startup.cjs
 ❌ `
 
 ❌ "greeting" # 🆕 NOVA - Exemplo/teste
-````
+```
 
 ### **Passo 6: Criar/Atualizar README**
 
@@ -623,9 +623,6 @@ echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | node build/index.js
 "puppeteer_type"         ✅
 "puppeteer_get_content"  ✅
 "puppeteer_new_tab"      ✅
-"browser_open_url"       ✅
-
-# ❌ "open_browser" removida com sucesso
 ```
 
 #### **🎓 Novos Learnings Aplicados:**
@@ -643,8 +640,113 @@ Atualizamos também toda a documentação:
 
 ---
 
-**Conclusão Expandida**: Este documento agora cobre **dois cenários completos** de remoção:
-1. **Módulo próprio** (`greeting`) - Processo simples
-2. **Módulo compartilhado** (`open_browser`) - Processo complexo
+**Conclusão Expandida**: Este documento agora cobre **três cenários completos** de remoção:
+1. **Módulo próprio** (`greeting`) - Ferramenta de demonstração
+2. **Módulo compartilhado** (`open_browser`) - Processo complexo  
+3. **Módulo próprio** (`browser_open_url`) - Substituição por ferramenta avançada
 
-Qualquer ferramenta futura pode ser removida seguindo um destes dois padrões, garantindo remoção segura e completa. 🚀
+Qualquer ferramenta futura pode ser removida seguindo um destes três padrões, garantindo remoção segura e completa. 🚀
+
+## 🎯 Caso de Uso Adicional: Remoção da Ferramenta `browser_open_url`
+
+### **Contexto: Substituição por Ferramenta Mais Avançada**
+
+**Data:** Janeiro 2025  
+**Motivo:** Usuário reportou ter ferramenta mais avançada, tornando `browser_open_url` redundante
+
+### **Estado Antes da Remoção:**
+
+```
+Ferramentas totais: 7
+- 6 ferramentas Puppeteer (úteis) ✅
+- 1 ferramenta Browser (redundante) ❌
+```
+
+### **Estado Após a Remoção:**
+
+```
+Ferramentas totais: 6
+- 6 ferramentas Puppeteer (úteis) ✅
+```
+
+### **🔧 Processo Executado:**
+
+#### **Tipo Identificado:** Módulo Próprio ✅
+- Ferramenta localizada em: `src/tools/browser/`
+- Estratégia aplicada: Remoção completa do módulo (igual ao caso `greeting`)
+
+#### **Passos Executados:**
+
+1️⃣ **Verificação inicial:**
+```bash
+echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | node build/index.js | jq '.result.tools | length'
+# Resultado: 7 ferramentas
+```
+
+2️⃣ **Localização da ferramenta:**
+```bash
+find src/tools -name "*.ts" -exec grep -l "browser_open_url" {} \;
+# Resultado: src/tools/browser/index.ts, src/tools/index.ts
+```
+
+3️⃣ **Remoção do módulo:**
+```bash
+rm -rf src/tools/browser/
+```
+
+4️⃣ **Atualização do agregador:**
+- ❌ Removido: `import { browserTools } from './browser/index.js';`
+- ❌ Removido: `export { browserTools, handleOpenUrl } from './browser/index.js';`
+- ❌ Removido: `...browserTools` do array `allTools`
+- ❌ Removido: `import { handleOpenUrl } from './browser/index.js';`
+- ❌ Removido: `browser_open_url: handleOpenUrl` do `toolHandlers`
+
+5️⃣ **Recompilação:**
+```bash
+npm run build
+# Resultado: ✅ Sucesso, sem erros
+```
+
+6️⃣ **Verificação final:**
+```bash
+echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | node build/index.js | jq '.result.tools | length'
+# Resultado: 6 ✅ (era 7)
+
+node startup.cjs
+# Resultado: ✓ Servidor respondeu em 263ms ✅
+```
+
+### **📋 Ferramentas Restantes:**
+
+```
+"puppeteer_navigate"     ✅
+"puppeteer_screenshot"   ✅  
+"puppeteer_click"        ✅
+"puppeteer_type"         ✅
+"puppeteer_get_content"  ✅
+"puppeteer_new_tab"      ✅
+```
+
+### **📝 Documentação Atualizada:**
+
+- ✅ `README.md`: Corrigido de 7 para 6 ferramentas
+- ✅ Removida seção "Categoria Browser Nativo"
+- ✅ Atualizada estrutura de pastas na documentação
+
+### **✨ Resultado Final:**
+
+**✅ Remoção bem-sucedida usando o padrão "Módulo Próprio"**
+
+- Sistema mais limpo e focado
+- 6 ferramentas Puppeteer mantidas e funcionais
+- Documentação sincronizada
+- Servidor operacional sem erros
+
+---
+
+**Conclusão Expandida**: Este documento agora cobre **três cenários completos** de remoção:
+1. **Módulo próprio** (`greeting`) - Ferramenta de demonstração
+2. **Módulo compartilhado** (`open_browser`) - Processo complexo  
+3. **Módulo próprio** (`browser_open_url`) - Substituição por ferramenta avançada
+
+Qualquer ferramenta futura pode ser removida seguindo um destes três padrões, garantindo remoção segura e completa. 🚀

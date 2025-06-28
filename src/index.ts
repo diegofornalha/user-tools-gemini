@@ -1,13 +1,18 @@
 #!/usr/bin/env node
 
 /**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * UserTools - MCP Server
  *
  * A Model Context Protocol server that provides diverse tools including
  * web automation through Puppeteer.
  *
  * @version 2.0.0
- * @license MIT
  */
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -38,7 +43,7 @@ const CONFIG = {
 
 // ==================== Server State ====================
 
-let requestCount = 0;
+// Request count tracking could be added here if needed
 
 // ==================== Server Setup ====================
 
@@ -62,8 +67,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
  */
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
-
-  requestCount++;
 
   if (!args) {
     return errorResponse(ErrorCode.INVALID_PARAMS, 'No arguments provided');
@@ -116,8 +119,6 @@ async function main() {
   await server.connect(transport);
 
   // Não logar nada no início para não interferir com o MCP
-  // console.error(`${CONFIG.server.name} v${CONFIG.server.version} started`);
-  // console.error(`Total requests processed: ${requestCount}`);
 }
 
 main().catch((error) => {

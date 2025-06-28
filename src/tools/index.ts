@@ -1,4 +1,10 @@
 /**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * Tools Index
  *
  * Exporta todas as ferramentas organizadas por categoria
@@ -15,14 +21,10 @@ export {
   startBrowserCleanup,
 } from './puppeteer/index.js';
 
-// Browser Tools
-export { browserTools, handleOpenUrl } from './browser/index.js';
-
 // Combinar todas as ferramentas
 import { puppeteerTools } from './puppeteer/index.js';
-import { browserTools } from './browser/index.js';
 
-export const allTools = [...puppeteerTools, ...browserTools];
+export const allTools = [...puppeteerTools];
 
 // Mapa de handlers por nome da ferramenta
 import {
@@ -33,8 +35,6 @@ import {
   handleGetContent,
 } from './puppeteer/index.js';
 
-import { handleOpenUrl } from './browser/index.js';
-
 export const toolHandlers = {
   // Puppeteer
   puppeteer_navigate: handleNavigate,
@@ -42,7 +42,4 @@ export const toolHandlers = {
   puppeteer_click: handleClick,
   puppeteer_type: handleType,
   puppeteer_get_content: handleGetContent,
-
-  // Browser
-  browser_open_url: handleOpenUrl,
 } as const;

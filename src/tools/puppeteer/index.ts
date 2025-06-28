@@ -1,4 +1,10 @@
 /**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * Puppeteer Tools Module
  *
  * Ferramentas de automação web usando Puppeteer
@@ -55,21 +61,17 @@ const BROWSER_CONFIG = {
  */
 async function ensureBrowser(): Promise<void> {
   if (!browser || !browser.isConnected()) {
-    console.log('🚀 Iniciando novo browser Puppeteer...');
-
     // Usa configuração simples como no reference server
     browser = await puppeteer.launch(BROWSER_CONFIG);
 
     // Adiciona listener para fechar gracefully
     browser.on('disconnected', () => {
-      console.log('❌ Browser desconectado');
       browser = null;
       page = null;
     });
   }
 
   if (!page || page.isClosed()) {
-    console.log('📄 Criando nova página...');
     const pages = await browser.pages();
     page = pages[0] || (await browser.newPage());
   }
@@ -83,7 +85,6 @@ async function ensureBrowser(): Promise<void> {
 export function startBrowserCleanup() {
   setInterval(async () => {
     if (browser && Date.now() - lastActivity > BROWSER_TIMEOUT) {
-      console.log('⏰ Fechando browser por inatividade...');
       await browser.close();
       browser = null;
       page = null;
@@ -120,7 +121,7 @@ export async function handleScreenshot(params: ScreenshotParams) {
   }
 
   await page.screenshot({
-    path: path as any, // Type assertion para resolver conflito de tipos
+    path: path as any, // Type assertion necessária para compatibilidade com Puppeteer
     fullPage: validated.fullPage,
   });
 

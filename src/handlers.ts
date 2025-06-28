@@ -1,4 +1,10 @@
 /**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * Tool handlers extracted from main index
  */
 
@@ -96,7 +102,7 @@ export async function handleScreenshot(params: ScreenshotParams) {
   }
 
   await page.screenshot({
-    path: path as any,
+    path: path as any, // Type assertion necessária para compatibilidade com Puppeteer
     fullPage: params.fullPage,
   });
 
