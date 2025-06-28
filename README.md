@@ -55,6 +55,7 @@ src/
 ## 📚 Documentação
 
 - [EXPANSAO_FERRAMENTAS.md](./EXPANSAO_FERRAMENTAS.md) - Detalhes sobre a refatoração e expansão das ferramentas
+- [REMOCAO_FERRAMENTAS.md](./REMOCAO_FERRAMENTAS.md) - Guia completo para remoção segura de ferramentas
 
 ## ⚖️ Licença
 
