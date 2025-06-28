@@ -19,10 +19,21 @@ export interface AgentConfig {
 
 // ================== SISTEMA DE SKILLS ==================
 
-export const SkillDifficultySchema = z.enum(['básico', 'intermediário', 'avançado']);
+export const SkillDifficultySchema = z.enum([
+  'básico',
+  'intermediário',
+  'avançado',
+]);
 export type SkillDifficulty = z.infer<typeof SkillDifficultySchema>;
 
-export const SkillCategorySchema = z.enum(['navegação', 'tarefas', 'filtros', 'dados', 'interface', 'automação']);
+export const SkillCategorySchema = z.enum([
+  'navegação',
+  'tarefas',
+  'filtros',
+  'dados',
+  'interface',
+  'automação',
+]);
 export type SkillCategory = z.infer<typeof SkillCategorySchema>;
 
 export interface EkyteSkill {
@@ -40,11 +51,28 @@ export interface EkyteSkill {
   selectors: string[]; // Seletores CSS aprendidos
   actions: SkillAction[]; // Sequência de ações
   confidence: number; // 0-1
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
+export interface RawSkillData
+  extends Omit<EkyteSkill, 'lastAttempt' | 'lastSuccess'> {
+  lastAttempt: string;
+  lastSuccess?: string;
+}
+
+export type SerializedSkillData = RawSkillData;
+
 export interface SkillAction {
-  type: 'navigate' | 'click' | 'type' | 'fill' | 'select' | 'hover' | 'wait' | 'extract' | 'screenshot';
+  type:
+    | 'navigate'
+    | 'click'
+    | 'type'
+    | 'fill'
+    | 'select'
+    | 'hover'
+    | 'wait'
+    | 'extract'
+    | 'screenshot';
   selector?: string;
   text?: string;
   url?: string;
@@ -53,6 +81,18 @@ export interface SkillAction {
   filename?: string;
   description: string;
   optional?: boolean;
+}
+
+export interface ActionContext {
+  url?: string;
+  [key: string]: unknown; // Allow for other properties
+}
+
+export interface ActionResult {
+  action: SkillAction;
+  success: boolean;
+  result?: unknown;
+  error?: string;
 }
 
 // ================== SESSÕES E PROGRESSO ==================
@@ -68,11 +108,17 @@ export interface EkyteSession {
   skillsImproved: string[];
   screenshots: string[];
   observations: string[];
-  dataExtracted: Record<string, any>;
+  dataExtracted: Record<string, unknown>;
   errors: string[];
   nextSteps: string[];
   autonomyLevel: number; // 0-100
   successRate: number; // 0-1
+}
+
+export interface SerializedEkyteSession
+  extends Omit<EkyteSession, 'startTime' | 'endTime'> {
+  startTime: string;
+  endTime?: string;
 }
 
 // ================== NAVEGAÇÃO E CONTEXTO ==================
@@ -80,7 +126,14 @@ export interface EkyteSession {
 export interface NavigationContext {
   currentUrl: string;
   pageTitle?: string;
-  pageType?: 'login' | 'dashboard' | 'tasks' | 'form' | 'list' | 'detail' | 'unknown';
+  pageType?:
+    | 'login'
+    | 'dashboard'
+    | 'tasks'
+    | 'form'
+    | 'list'
+    | 'detail'
+    | 'unknown';
   elementsDetected: DetectedElement[];
   possibleActions: string[];
   suggestions: string[];
@@ -103,12 +156,12 @@ export interface DetectedElement {
 
 export interface TaskResult {
   success: boolean;
-  data?: any;
+  data?: unknown;
   error?: string;
   executionTime: number;
   skillsUsed: string[];
   screenshotsTaken: string[];
-  dataExtracted: Record<string, any>;
+  dataExtracted: Record<string, unknown>;
   observations: string[];
   autonomyLevel: number;
 }
@@ -120,10 +173,10 @@ export interface SkillExecutionResult {
   actions: Array<{
     action: SkillAction;
     success: boolean;
-    result?: any;
+    result?: unknown;
     error?: string;
   }>;
-  dataExtracted: Record<string, any>;
+  dataExtracted: Record<string, unknown>;
   screenshot?: string;
   observations: string[];
   confidence: number;
@@ -187,19 +240,31 @@ export const SkillSchema = z.object({
   lastSuccess: z.date().optional(),
   evidence: z.array(z.string()),
   selectors: z.array(z.string()),
-  actions: z.array(z.object({
-    type: z.enum(['navigate', 'click', 'type', 'fill', 'select', 'hover', 'wait', 'extract', 'screenshot']),
-    selector: z.string().optional(),
-    text: z.string().optional(),
-    url: z.string().optional(),
-    timeout: z.number().optional(),
-    extractField: z.string().optional(),
-    filename: z.string().optional(),
-    description: z.string(),
-    optional: z.boolean().optional()
-  })),
+  actions: z.array(
+    z.object({
+      type: z.enum([
+        'navigate',
+        'click',
+        'type',
+        'fill',
+        'select',
+        'hover',
+        'wait',
+        'extract',
+        'screenshot',
+      ]),
+      selector: z.string().optional(),
+      text: z.string().optional(),
+      url: z.string().optional(),
+      timeout: z.number().optional(),
+      extractField: z.string().optional(),
+      filename: z.string().optional(),
+      description: z.string(),
+      optional: z.boolean().optional(),
+    }),
+  ),
   confidence: z.number().min(0).max(1),
-  metadata: z.record(z.any())
+  metadata: z.record(z.any()),
 });
 
 export const SessionSchema = z.object({
@@ -217,16 +282,21 @@ export const SessionSchema = z.object({
   errors: z.array(z.string()),
   nextSteps: z.array(z.string()),
   autonomyLevel: z.number().min(0).max(100),
-  successRate: z.number().min(0).max(1)
+  successRate: z.number().min(0).max(1),
 });
 
 // ================== UTILITÁRIOS DE TIPO ==================
 
-export type PartialSkill = Partial<EkyteSkill> & Pick<EkyteSkill, 'name' | 'description' | 'category'>;
+export type PartialSkill = Partial<EkyteSkill> &
+  Pick<EkyteSkill, 'name' | 'description' | 'category'>;
 
-export type SkillUpdate = Partial<Pick<EkyteSkill, 'learned' | 'confidence' | 'evidence' | 'metadata'>>;
+export type SkillUpdate = Partial<
+  Pick<EkyteSkill, 'learned' | 'confidence' | 'evidence' | 'metadata'>
+>;
 
-export type SessionUpdate = Partial<Pick<EkyteSession, 'observations' | 'dataExtracted' | 'errors' | 'nextSteps'>>;
+export type SessionUpdate = Partial<
+  Pick<EkyteSession, 'observations' | 'dataExtracted' | 'errors' | 'nextSteps'>
+>;
 
 // ================== CONSTANTES ==================
 
@@ -236,16 +306,16 @@ export const MAX_SCREENSHOTS_PER_SESSION = 50;
 export const MAX_OBSERVATIONS_PER_SESSION = 100;
 
 export const SKILL_DIFFICULTY_WEIGHTS: Record<SkillDifficulty, number> = {
-  'básico': 1,
-  'intermediário': 2,
-  'avançado': 3
+  básico: 1,
+  intermediário: 2,
+  avançado: 3,
 };
 
 export const CATEGORY_PRIORITIES: Record<SkillCategory, number> = {
-  'navegação': 10,
-  'interface': 8,
-  'tarefas': 6,
-  'dados': 4,
-  'filtros': 3,
-  'automação': 2
-}; 
+  navegação: 10,
+  interface: 8,
+  tarefas: 6,
+  dados: 4,
+  filtros: 3,
+  automação: 2,
+};

@@ -67,7 +67,7 @@ export interface TypeParams {
 
 // ==================== Response Types ====================
 
-export type ToolResult<T = any> =
+export type ToolResult<T = unknown> =
   | { success: true; data: T; content: ContentBlock[] }
   | { success: false; error: MCPError; content: ContentBlock[] };
 
@@ -101,7 +101,7 @@ export class MCPError extends Error {
   constructor(
     public code: ErrorCode,
     message: string,
-    public details?: any,
+    public details?: unknown,
   ) {
     super(message);
     this.name = 'MCPError';
@@ -124,23 +124,25 @@ export interface ToolDefinition {
   description: string;
   inputSchema: {
     type: 'object';
-    properties: Record<string, any>;
+    properties: Record<string, unknown>;
     required?: string[];
   };
-  handler: (args: any) => Promise<ToolResult>;
+  handler: (args: Record<string, unknown>) => Promise<ToolResult>;
 }
 
 // ==================== Type Guards ====================
 
-export function isNavigateParams(params: any): params is NavigateParams {
-  return typeof params?.url === 'string';
+export function isNavigateParams(params: unknown): params is NavigateParams {
+  return typeof (params as NavigateParams)?.url === 'string';
 }
 
-export function isScreenshotParams(params: any): params is ScreenshotParams {
-  return typeof params?.path === 'string';
+export function isScreenshotParams(
+  params: unknown,
+): params is ScreenshotParams {
+  return typeof (params as ScreenshotParams)?.path === 'string';
 }
 
-export function isMCPError(error: any): error is MCPError {
+export function isMCPError(error: unknown): error is MCPError {
   return error instanceof MCPError;
 }
 
@@ -150,8 +152,9 @@ export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
 };
 
-export type AsyncReturnType<T extends (...args: any) => Promise<any>> =
-  T extends (...args: any) => Promise<infer U> ? U : never;
+export type AsyncReturnType<
+  T extends (...args: unknown[]) => Promise<unknown>,
+> = T extends (...args: unknown[]) => Promise<infer U> ? U : never;
 
 export type ExtractToolParams<T extends ToolName> =
   T extends ToolName.PUPPETEER_NAVIGATE

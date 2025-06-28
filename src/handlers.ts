@@ -102,7 +102,7 @@ export async function handleScreenshot(params: ScreenshotParams) {
   }
 
   await page.screenshot({
-    path: path as any, // Type assertion necessária para compatibilidade com Puppeteer
+    path: path as string, // Type assertion necessária para compatibilidade com Puppeteer
     fullPage: params.fullPage,
   });
 

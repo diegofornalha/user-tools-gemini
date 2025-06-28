@@ -77,7 +77,10 @@ export const ScrollSchema = z.object({
 });
 
 export const ReloadSchema = z.object({
-  waitUntil: z.enum(['load', 'domcontentloaded', 'networkidle0', 'networkidle2']).optional().default('networkidle2'),
+  waitUntil: z
+    .enum(['load', 'domcontentloaded', 'networkidle0', 'networkidle2'])
+    .optional()
+    .default('networkidle2'),
 });
 
 // 🆕 Schemas da Fase 3 - Extração Avançada
@@ -146,10 +149,10 @@ async function tryConnectToExistingBrowser(): Promise<Browser | null> {
       browserURL: 'http://localhost:9222',
       defaultViewport: DEFAULT_VIEWPORT,
     });
-    
+
     console.log('✅ Conectado ao Chrome existente na porta 9222');
     return browser;
-  } catch (error) {
+  } catch (_error) {
     console.log('ℹ️ Nenhuma instância do Chrome encontrada, criando nova...');
     return null;
   }
@@ -163,7 +166,7 @@ async function ensureBrowser(): Promise<void> {
   if (!browser || !browser.isConnected()) {
     // 🆕 Primeira tentativa: conectar ao Chrome existente
     browser = await tryConnectToExistingBrowser();
-    
+
     // Se não conseguiu conectar, cria nova instância
     if (!browser) {
       browser = await puppeteer.launch(BROWSER_CONFIG);
@@ -171,7 +174,9 @@ async function ensureBrowser(): Promise<void> {
     }
 
     browser.on('disconnected', () => {
-      console.log('⚠️ Chrome desconectado, tentará reconectar na próxima operação');
+      console.log(
+        '⚠️ Chrome desconectado, tentará reconectar na próxima operação',
+      );
       browser = null;
       page = null;
       pages = [];
@@ -196,10 +201,12 @@ async function ensureBrowser(): Promise<void> {
 export function startBrowserCleanup() {
   setInterval(async () => {
     if (browser && Date.now() - lastActivity > BROWSER_TIMEOUT) {
-      console.log('ℹ️ Chrome inativo há 24h, mas mantendo aberto (página persistente)');
+      console.log(
+        'ℹ️ Chrome inativo há 24h, mas mantendo aberto (página persistente)',
+      );
       // 🆕 NÃO fecha o browser automaticamente
       // await browser.close(); // ❌ Removido
-      // browser = null;        // ❌ Removido  
+      // browser = null;        // ❌ Removido
       // page = null;           // ❌ Removido
       // pages = [];            // ❌ Removido
     }
@@ -249,7 +256,7 @@ export async function handleScreenshot(params: ScreenshotParams) {
   }
 
   await page.screenshot({
-    path: path as any,
+    path: path as string,
     fullPage: validated.fullPage,
   });
 
@@ -336,7 +343,10 @@ export async function handleFill(params: { selector: string; value: string }) {
   );
 }
 
-export async function handleSelect(params: { selector: string; value: string }) {
+export async function handleSelect(params: {
+  selector: string;
+  value: string;
+}) {
   const validated = SelectSchema.parse(params);
 
   await ensureBrowser();
@@ -373,7 +383,7 @@ export async function handleEvaluate(params: { script: string }) {
   if (!page)
     throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Página não inicializada');
 
-  const result = await page.evaluate(validated.script);
+  const result: unknown = await page.evaluate(validated.script);
 
   return successResponse(
     { script: validated.script, result },
@@ -383,7 +393,11 @@ export async function handleEvaluate(params: { script: string }) {
 
 // ================== HANDLERS - FASE 2: NAVEGAÇÃO AVANÇADA ==================
 
-export async function handleWaitForElement(params: { selector: string; timeout?: number; visible?: boolean }) {
+export async function handleWaitForElement(params: {
+  selector: string;
+  timeout?: number;
+  visible?: boolean;
+}) {
   const validated = WaitForElementSchema.parse(params);
 
   await ensureBrowser();
@@ -401,7 +415,11 @@ export async function handleWaitForElement(params: { selector: string; timeout?:
   );
 }
 
-export async function handleScroll(params: { direction?: string; amount?: number; selector?: string }) {
+export async function handleScroll(params: {
+  direction?: string;
+  amount?: number;
+  selector?: string;
+}) {
   const validated = ScrollSchema.parse(params);
 
   await ensureBrowser();
@@ -410,47 +428,60 @@ export async function handleScroll(params: { direction?: string; amount?: number
 
   if (validated.selector) {
     // Scroll em elemento específico
-    await page.evaluate((selector, direction, amount) => {
-      const element = document.querySelector(selector);
-      if (element) {
-        switch (direction) {
-          case 'up':
-            element.scrollTop -= amount;
-            break;
-          case 'down':
-            element.scrollTop += amount;
-            break;
-          case 'left':
-            element.scrollLeft -= amount;
-            break;
-          case 'right':
-            element.scrollLeft += amount;
-            break;
+    await page.evaluate(
+      (selector, direction, amount) => {
+        const element = document.querySelector(selector);
+        if (element) {
+          switch (direction) {
+            case 'up':
+              element.scrollTop -= amount;
+              break;
+            case 'down':
+              element.scrollTop += amount;
+              break;
+            case 'left':
+              element.scrollLeft -= amount;
+              break;
+            case 'right':
+              element.scrollLeft += amount;
+              break;
+          }
         }
-      }
-    }, validated.selector, validated.direction, validated.amount);
+      },
+      validated.selector,
+      validated.direction,
+      validated.amount,
+    );
   } else {
     // Scroll da página
-    await page.evaluate((direction, amount) => {
-      switch (direction) {
-        case 'up':
-          window.scrollBy(0, -amount);
-          break;
-        case 'down':
-          window.scrollBy(0, amount);
-          break;
-        case 'left':
-          window.scrollBy(-amount, 0);
-          break;
-        case 'right':
-          window.scrollBy(amount, 0);
-          break;
-      }
-    }, validated.direction, validated.amount);
+    await page.evaluate(
+      (direction, amount) => {
+        switch (direction) {
+          case 'up':
+            window.scrollBy(0, -amount);
+            break;
+          case 'down':
+            window.scrollBy(0, amount);
+            break;
+          case 'left':
+            window.scrollBy(-amount, 0);
+            break;
+          case 'right':
+            window.scrollBy(amount, 0);
+            break;
+        }
+      },
+      validated.direction,
+      validated.amount,
+    );
   }
 
   return successResponse(
-    { direction: validated.direction, amount: validated.amount, selector: validated.selector },
+    {
+      direction: validated.direction,
+      amount: validated.amount,
+      selector: validated.selector,
+    },
     `Scroll realizado: ${validated.direction} (${validated.amount}px)`,
   );
 }
@@ -463,10 +494,7 @@ export async function handleGoBack() {
   await page.goBack({ waitUntil: 'networkidle2' });
   const url = page.url();
 
-  return successResponse(
-    { url },
-    `Voltou para página anterior: ${url}`,
-  );
+  return successResponse({ url }, `Voltou para página anterior: ${url}`);
 }
 
 export async function handleReload(params: { waitUntil?: string } = {}) {
@@ -476,7 +504,7 @@ export async function handleReload(params: { waitUntil?: string } = {}) {
   if (!page)
     throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Página não inicializada');
 
-  await page.reload({ waitUntil: validated.waitUntil as any });
+  await page.reload({ waitUntil: validated.waitUntil });
   const url = page.url();
 
   return successResponse(
@@ -487,7 +515,10 @@ export async function handleReload(params: { waitUntil?: string } = {}) {
 
 // ================== HANDLERS - FASE 3: EXTRAÇÃO AVANÇADA ==================
 
-export async function handleGetText(params: { selector: string; trim?: boolean }) {
+export async function handleGetText(params: {
+  selector: string;
+  trim?: boolean;
+}) {
   const validated = GetTextSchema.parse(params);
 
   await ensureBrowser();
@@ -496,10 +527,13 @@ export async function handleGetText(params: { selector: string; trim?: boolean }
 
   const element = await page.$(validated.selector);
   if (!element) {
-    throw new MCPError(ErrorCode.INTERNAL_ERROR, `Elemento não encontrado: ${validated.selector}`);
+    throw new MCPError(
+      ErrorCode.INTERNAL_ERROR,
+      `Elemento não encontrado: ${validated.selector}`,
+    );
   }
 
-  let text = await element.evaluate(el => el.textContent);
+  let text = await element.evaluate((el) => el.textContent);
   if (validated.trim && text) {
     text = text.trim();
   }
@@ -510,7 +544,10 @@ export async function handleGetText(params: { selector: string; trim?: boolean }
   );
 }
 
-export async function handleGetAttribute(params: { selector: string; attribute: string }) {
+export async function handleGetAttribute(params: {
+  selector: string;
+  attribute: string;
+}) {
   const validated = GetAttributeSchema.parse(params);
 
   await ensureBrowser();
@@ -519,10 +556,16 @@ export async function handleGetAttribute(params: { selector: string; attribute: 
 
   const element = await page.$(validated.selector);
   if (!element) {
-    throw new MCPError(ErrorCode.INTERNAL_ERROR, `Elemento não encontrado: ${validated.selector}`);
+    throw new MCPError(
+      ErrorCode.INTERNAL_ERROR,
+      `Elemento não encontrado: ${validated.selector}`,
+    );
   }
 
-  const value = await element.evaluate((el, attr) => el.getAttribute(attr), validated.attribute);
+  const value = await element.evaluate(
+    (el, attr) => el.getAttribute(attr),
+    validated.attribute,
+  );
 
   return successResponse(
     { selector: validated.selector, attribute: validated.attribute, value },
@@ -537,10 +580,7 @@ export async function handleGetTitle() {
 
   const title = await page.title();
 
-  return successResponse(
-    { title },
-    `Título da página: ${title}`,
-  );
+  return successResponse({ title }, `Título da página: ${title}`);
 }
 
 export async function handleGetUrl() {
@@ -550,10 +590,7 @@ export async function handleGetUrl() {
 
   const url = page.url();
 
-  return successResponse(
-    { url },
-    `URL atual: ${url}`,
-  );
+  return successResponse({ url }, `URL atual: ${url}`);
 }
 
 // ================== HANDLERS - FASE 4: GESTÃO DE ABAS ==================
@@ -564,14 +601,14 @@ export async function handleListTabs() {
     throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Browser não inicializado');
 
   pages = await browser.pages();
-  
+
   const tabs = await Promise.all(
     pages.map(async (p, index) => ({
       index,
       url: p.url(),
       title: await p.title(),
       active: p === page,
-    }))
+    })),
   );
 
   return successResponse(
@@ -588,21 +625,31 @@ export async function handleSwitchTab(params: { tabIndex: number }) {
     throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Browser não inicializado');
 
   pages = await browser.pages();
-  
+
   if (validated.tabIndex >= pages.length) {
-    throw new MCPError(ErrorCode.INTERNAL_ERROR, `Aba ${validated.tabIndex} não existe. Total: ${pages.length}`);
+    throw new MCPError(
+      ErrorCode.INTERNAL_ERROR,
+      `Aba ${validated.tabIndex} não existe. Total: ${pages.length}`,
+    );
   }
 
   const targetPage = pages[validated.tabIndex];
   if (!targetPage) {
-    throw new MCPError(ErrorCode.INTERNAL_ERROR, `Aba ${validated.tabIndex} não encontrada`);
+    throw new MCPError(
+      ErrorCode.INTERNAL_ERROR,
+      `Aba ${validated.tabIndex} não encontrada`,
+    );
   }
 
   page = targetPage;
   await page.bringToFront();
 
   return successResponse(
-    { tabIndex: validated.tabIndex, url: page.url(), title: await page.title() },
+    {
+      tabIndex: validated.tabIndex,
+      url: page.url(),
+      title: await page.title(),
+    },
     `Alternado para aba ${validated.tabIndex}`,
   );
 }
@@ -621,17 +668,26 @@ export async function handleCloseTab(params: { tabIndex?: number } = {}) {
 
   if (validated.tabIndex !== undefined) {
     if (validated.tabIndex >= pages.length) {
-      throw new MCPError(ErrorCode.INTERNAL_ERROR, `Aba ${validated.tabIndex} não existe. Total: ${pages.length}`);
+      throw new MCPError(
+        ErrorCode.INTERNAL_ERROR,
+        `Aba ${validated.tabIndex} não existe. Total: ${pages.length}`,
+      );
     }
     const selectedPage = pages[validated.tabIndex];
     if (!selectedPage) {
-      throw new MCPError(ErrorCode.INTERNAL_ERROR, `Aba ${validated.tabIndex} não encontrada`);
+      throw new MCPError(
+        ErrorCode.INTERNAL_ERROR,
+        `Aba ${validated.tabIndex} não encontrada`,
+      );
     }
     targetPage = selectedPage;
     targetIndex = validated.tabIndex;
   } else {
     if (!page) {
-      throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Nenhuma aba ativa para fechar');
+      throw new MCPError(
+        ErrorCode.PAGE_LOAD_FAILED,
+        'Nenhuma aba ativa para fechar',
+      );
     }
     targetPage = page;
     targetIndex = pages.indexOf(page);
@@ -687,7 +743,7 @@ export async function handleDuplicateTab() {
 
 export async function handleClosePersistentBrowser() {
   await closePersistentBrowser();
-  
+
   return successResponse(
     { action: 'browser_closed' },
     'Chrome persistente fechado manualmente',
@@ -699,9 +755,9 @@ export async function handleGetBrowserStatus() {
   const totalPages = pages.length;
   const currentUrl = page?.url() ?? 'Nenhuma página ativa';
   const uptime = Date.now() - lastActivity;
-  
+
   return successResponse(
-    { 
+    {
       connected: isConnected,
       totalPages,
       currentUrl,
@@ -721,7 +777,7 @@ function formatUptime(ms: number): string {
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
-  
+
   if (days > 0) return `${days}d ${hours % 24}h ${minutes % 60}m`;
   if (hours > 0) return `${hours}h ${minutes % 60}m`;
   if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
@@ -750,7 +806,11 @@ export const puppeteerTools = [
       type: 'object',
       properties: {
         path: { type: 'string', description: 'Path to save the screenshot' },
-        fullPage: { type: 'boolean', description: 'Capture full page', default: false },
+        fullPage: {
+          type: 'boolean',
+          description: 'Capture full page',
+          default: false,
+        },
       },
       required: ['path'],
     },
@@ -761,7 +821,10 @@ export const puppeteerTools = [
     inputSchema: {
       type: 'object',
       properties: {
-        selector: { type: 'string', description: 'CSS selector of element to click' },
+        selector: {
+          type: 'string',
+          description: 'CSS selector of element to click',
+        },
       },
       required: ['selector'],
     },
@@ -802,7 +865,10 @@ export const puppeteerTools = [
     inputSchema: {
       type: 'object',
       properties: {
-        selector: { type: 'string', description: 'CSS selector of input field' },
+        selector: {
+          type: 'string',
+          description: 'CSS selector of input field',
+        },
         value: { type: 'string', description: 'Value to fill' },
       },
       required: ['selector', 'value'],
@@ -814,7 +880,10 @@ export const puppeteerTools = [
     inputSchema: {
       type: 'object',
       properties: {
-        selector: { type: 'string', description: 'CSS selector of select element' },
+        selector: {
+          type: 'string',
+          description: 'CSS selector of select element',
+        },
         value: { type: 'string', description: 'Value to select' },
       },
       required: ['selector', 'value'],
@@ -826,7 +895,10 @@ export const puppeteerTools = [
     inputSchema: {
       type: 'object',
       properties: {
-        selector: { type: 'string', description: 'CSS selector of element to hover' },
+        selector: {
+          type: 'string',
+          description: 'CSS selector of element to hover',
+        },
       },
       required: ['selector'],
     },
@@ -843,7 +915,7 @@ export const puppeteerTools = [
     },
   },
 
-  // FASE 2: NAVEGAÇÃO AVANÇADA  
+  // FASE 2: NAVEGAÇÃO AVANÇADA
   {
     name: 'puppeteer_wait_for_element',
     description: 'Wait for an element to appear on the page',
@@ -851,8 +923,16 @@ export const puppeteerTools = [
       type: 'object',
       properties: {
         selector: { type: 'string', description: 'CSS selector to wait for' },
-        timeout: { type: 'number', description: 'Timeout in milliseconds', default: 30000 },
-        visible: { type: 'boolean', description: 'Wait for element to be visible', default: true },
+        timeout: {
+          type: 'number',
+          description: 'Timeout in milliseconds',
+          default: 30000,
+        },
+        visible: {
+          type: 'boolean',
+          description: 'Wait for element to be visible',
+          default: true,
+        },
       },
       required: ['selector'],
     },
@@ -863,9 +943,21 @@ export const puppeteerTools = [
     inputSchema: {
       type: 'object',
       properties: {
-        direction: { type: 'string', enum: ['up', 'down', 'left', 'right'], description: 'Scroll direction', default: 'down' },
-        amount: { type: 'number', description: 'Amount to scroll in pixels', default: 500 },
-        selector: { type: 'string', description: 'CSS selector of element to scroll (optional)' },
+        direction: {
+          type: 'string',
+          enum: ['up', 'down', 'left', 'right'],
+          description: 'Scroll direction',
+          default: 'down',
+        },
+        amount: {
+          type: 'number',
+          description: 'Amount to scroll in pixels',
+          default: 500,
+        },
+        selector: {
+          type: 'string',
+          description: 'CSS selector of element to scroll (optional)',
+        },
       },
     },
   },
@@ -880,7 +972,12 @@ export const puppeteerTools = [
     inputSchema: {
       type: 'object',
       properties: {
-        waitUntil: { type: 'string', enum: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2'], description: 'When to consider reload complete', default: 'networkidle2' },
+        waitUntil: {
+          type: 'string',
+          enum: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2'],
+          description: 'When to consider reload complete',
+          default: 'networkidle2',
+        },
       },
     },
   },
@@ -893,7 +990,11 @@ export const puppeteerTools = [
       type: 'object',
       properties: {
         selector: { type: 'string', description: 'CSS selector of element' },
-        trim: { type: 'boolean', description: 'Trim whitespace', default: true },
+        trim: {
+          type: 'boolean',
+          description: 'Trim whitespace',
+          default: true,
+        },
       },
       required: ['selector'],
     },
@@ -933,7 +1034,10 @@ export const puppeteerTools = [
     inputSchema: {
       type: 'object',
       properties: {
-        tabIndex: { type: 'number', description: 'Index of tab to switch to (0-based)' },
+        tabIndex: {
+          type: 'number',
+          description: 'Index of tab to switch to (0-based)',
+        },
       },
       required: ['tabIndex'],
     },
@@ -944,7 +1048,11 @@ export const puppeteerTools = [
     inputSchema: {
       type: 'object',
       properties: {
-        tabIndex: { type: 'number', description: 'Index of tab to close (optional, defaults to current tab)' },
+        tabIndex: {
+          type: 'number',
+          description:
+            'Index of tab to close (optional, defaults to current tab)',
+        },
       },
     },
   },

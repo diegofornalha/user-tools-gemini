@@ -4,51 +4,61 @@ Um servidor MCP (Model Context Protocol) que fornece ferramentas avançadas de a
 
 ## 🎯 **Ferramentas Disponíveis (28 total)** 🆕
 
-### 🤖 **Agentes Autônomos (4 ferramentas)** 
+### 🤖 **Agentes Autônomos (4 ferramentas)**
+
 - `agents_create` - Criar novo agente EkyteNavigator
-- `agents_list` - Listar agentes ativos 
+- `agents_list` - Listar agentes ativos
 - `agents_execute_skill` - Executar skill específica
 - `agents_list_skills` - Listar skills disponíveis
 
 ### 🏁 **Navegação Básica (2 ferramentas)**
+
 - `puppeteer_navigate` - Navegar para uma URL
 - `puppeteer_new_tab` - Abrir URL em nova aba
 
 ### 🎮 **Interação Básica (2 ferramentas)**
+
 - `puppeteer_click` - Clicar em um elemento
 - `puppeteer_type` - Digitar texto em um elemento
 
 ### 🎯 **Interação Avançada (3 ferramentas)**
-- `puppeteer_fill` - Preencher campo (limpa antes de digitar) 
-- `puppeteer_select` - Selecionar opção em dropdown 
-- `puppeteer_hover` - Hover sobre elemento 
+
+- `puppeteer_fill` - Preencher campo (limpa antes de digitar)
+- `puppeteer_select` - Selecionar opção em dropdown
+- `puppeteer_hover` - Hover sobre elemento
 
 ### 🧭 **Navegação Avançada (4 ferramentas)**
-- `puppeteer_wait_for_element` - Aguardar elemento aparecer 
-- `puppeteer_scroll` - Scroll da página ou elemento específico 
-- `puppeteer_go_back` - Voltar página anterior 
-- `puppeteer_reload` - Recarregar página atual 
+
+- `puppeteer_wait_for_element` - Aguardar elemento aparecer
+- `puppeteer_scroll` - Scroll da página ou elemento específico
+- `puppeteer_go_back` - Voltar página anterior
+- `puppeteer_reload` - Recarregar página atual
 
 ### 📤 **Extração Básica (2 ferramentas)**
+
 - `puppeteer_screenshot` - Tirar screenshot da página atual
 - `puppeteer_get_content` - Obter conteúdo HTML da página
 
 ### 📊 **Extração Avançada (4 ferramentas)**
-- `puppeteer_get_text` - Extrair texto de elemento 
-- `puppeteer_get_attribute` - Extrair atributos de elemento 
-- `puppeteer_get_title` - Obter título da página 
-- `puppeteer_get_url` - Obter URL atual 
+
+- `puppeteer_get_text` - Extrair texto de elemento
+- `puppeteer_get_attribute` - Extrair atributos de elemento
+- `puppeteer_get_title` - Obter título da página
+- `puppeteer_get_url` - Obter URL atual
 
 ### 🗂️ **Gestão de Abas (4 ferramentas)**
-- `puppeteer_list_tabs` - Listar todas as abas abertas 
-- `puppeteer_switch_tab` - Alternar para aba específica 
-- `puppeteer_close_tab` - Fechar aba específica ou atual 
-- `puppeteer_duplicate_tab` - Duplicar aba atual 
+
+- `puppeteer_list_tabs` - Listar todas as abas abertas
+- `puppeteer_switch_tab` - Alternar para aba específica
+- `puppeteer_close_tab` - Fechar aba específica ou atual
+- `puppeteer_duplicate_tab` - Duplicar aba atual
 
 ### 🔬 **Avançado (1 ferramenta)**
-- `puppeteer_evaluate` - Executar JavaScript no contexto da página 
+
+- `puppeteer_evaluate` - Executar JavaScript no contexto da página
 
 ### 🔄 **Chrome Persistente (2 ferramentas)** 🆕
+
 - `puppeteer_get_browser_status` - Status do Chrome persistente
 - `puppeteer_close_persistent_browser` - Fechar Chrome manualmente
 
@@ -69,6 +79,7 @@ echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | node build/index.js
 ```
 
 Listar nomes das ferramentas:
+
 ```bash
 echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | node build/index.js | jq -r '.result.tools[] | .name'
 ```
@@ -86,6 +97,7 @@ node build/index.js
 ### 🤖 **Sistema de Agentes Autônomos** 🆕
 
 #### **Criar Agente com Preset**
+
 ```json
 {
   "tool": "agents_create",
@@ -101,6 +113,7 @@ node build/index.js
 ```
 
 #### **Executar Skill Específica**
+
 ```json
 {
   "tool": "agents_execute_skill",
@@ -115,6 +128,7 @@ node build/index.js
 ```
 
 #### **Listar Skills Aprendidas**
+
 ```json
 {
   "tool": "agents_list_skills",
@@ -129,6 +143,7 @@ node build/index.js
 ```
 
 ### 🔍 **Aguardar Elementos Dinâmicos**
+
 ```json
 {
   "tool": "puppeteer_wait_for_element",
@@ -141,6 +156,7 @@ node build/index.js
 ```
 
 ### 📜 **Scroll Inteligente**
+
 ```json
 {
   "tool": "puppeteer_scroll",
@@ -153,6 +169,7 @@ node build/index.js
 ```
 
 ### 📝 **Extrair Texto Específico**
+
 ```json
 {
   "tool": "puppeteer_get_text",
@@ -164,6 +181,7 @@ node build/index.js
 ```
 
 ### 🔗 **Extrair Links**
+
 ```json
 {
   "tool": "puppeteer_get_attribute",
@@ -175,6 +193,7 @@ node build/index.js
 ```
 
 ### 🗂️ **Gerenciar Múltiplas Abas**
+
 ```json
 {
   "tool": "puppeteer_list_tabs",
@@ -192,6 +211,7 @@ node build/index.js
 ```
 
 ### 🔧 **JavaScript Personalizado**
+
 ```json
 {
   "tool": "puppeteer_evaluate",
@@ -229,20 +249,24 @@ src/
 ## 🆕 **Diferenças-Chave das Ferramentas Melhoradas**
 
 ### **`puppeteer_fill` vs `puppeteer_type`**
+
 - **`type`**: Adiciona texto ao que já existe
 - **`fill`**: Limpa campo completamente antes de preencher (melhor para formulários)
 
 ### **`puppeteer_wait_for_element`**
+
 - Essencial para SPAs (Single Page Applications)
 - Aguarda elementos carregarem dinamicamente
 - Configura timeout personalizado
 
 ### **`puppeteer_scroll`**
+
 - Scroll da página inteira ou elemento específico
 - Controle de direção (up/down/left/right)
 - Quantidade customizável em pixels
 
 ### **Gestão de Abas**
+
 - Controle completo de múltiplas abas
 - Listagem com URL e título
 - Alternância e fechamento inteligente
@@ -250,16 +274,19 @@ src/
 ## 🎯 **Casos de Uso Avançados**
 
 ### **1. Automação de Formulários Complexos**
+
 ```bash
 1. navigate → wait_for_element → fill → select → click
 ```
 
 ### **2. Scraping de Sites com Scroll Infinito**
+
 ```bash
 1. navigate → scroll → wait_for_element → get_text → scroll (repetir)
 ```
 
 ### **3. Gestão de Workflow Multi-Aba**
+
 ```bash
 1. new_tab → list_tabs → switch_tab → navigate → get_content
 ```
@@ -269,23 +296,27 @@ src/
 ### **Características Principais**
 
 #### **🧠 Aprendizado Evolutivo**
+
 - **8 skills padrão** pré-configuradas para Ekyte
 - **Persistência automática** em JSON (dev/test/prod)
 - **Sistema de confiança** baseado em tentativas e sucessos
 - **Métricas de performance** para cada skill
 
 #### **⚙️ Presets de Configuração**
+
 - **Development**: `learningMode: 'active'`, exploração automática
-- **Production**: `learningMode: 'passive'`, operação controlada  
+- **Production**: `learningMode: 'passive'`, operação controlada
 - **Testing**: `learningMode: 'aggressive'`, timeouts curtos
 
 #### **📊 Gestão de Sessões**
+
 - **Auto-save** configurável (1-300 segundos)
 - **Event system** para monitoramento em tempo real
 - **Análise de progresso** de autonomia (0-100%)
 - **Controle de timeout** por sessão
 
 #### **🎯 Skills Pré-Configuradas**
+
 ```json
 {
   "Navegação": ["Acessar Login Ekyte", "Realizar Login"],
@@ -297,11 +328,13 @@ src/
 ```
 
 ### **4. Automação Autônoma com Agentes**
+
 ```bash
 1. new_tab → switch_tab → list_tabs → close_tab
 ```
 
 ### **5. Testes E2E Completos**
+
 ```bash
 1. navigate → wait_for_element → fill → hover → click → get_text → screenshot
 ```
@@ -332,12 +365,14 @@ MIT
 O sistema agora mantém uma **instância do Chrome sempre aberta**, eliminando a necessidade de reiniciar o navegador a cada uso:
 
 #### **🔄 Funcionalidades:**
+
 - **Reconexão automática**: Se o Chrome for fechado acidentalmente, reconecta automaticamente
 - **Dados persistentes**: Cookies, sessões e cache são mantidos entre uso
 - **Porta fixa**: Chrome executa na porta 9222 para reconexão
 - **Timeout estendido**: 24 horas de inatividade antes de fechar (vs 5 minutos antes)
 
 #### **🎯 Vantagens:**
+
 - ✅ **Performance**: Navegação instantânea sem tempo de inicialização
 - ✅ **Sessões persistentes**: Login mantido entre usos
 - ✅ **Cache inteligente**: Páginas carregam mais rápido
@@ -346,6 +381,7 @@ O sistema agora mantém uma **instância do Chrome sempre aberta**, eliminando a
 ### **Gerenciamento do Chrome Persistente:**
 
 #### **Status do Browser:**
+
 ```json
 {
   "tool": "puppeteer_get_browser_status",
@@ -354,6 +390,7 @@ O sistema agora mantém uma **instância do Chrome sempre aberta**, eliminando a
 ```
 
 **Retorna:**
+
 ```json
 {
   "connected": true,
@@ -366,6 +403,7 @@ O sistema agora mantém uma **instância do Chrome sempre aberta**, eliminando a
 ```
 
 #### **Fechar Manualmente (quando necessário):**
+
 ```json
 {
   "tool": "puppeteer_close_persistent_browser",
@@ -389,6 +427,7 @@ Auto-reconnect: ✅ Ativo
 ### **🔧 Troubleshooting:**
 
 #### **Chrome não conecta?**
+
 ```bash
 # 1. Verificar status
 echo '{"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "puppeteer_get_browser_status", "arguments": {}}, "id": 1}' | node build/index.js
@@ -398,6 +437,7 @@ echo '{"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "puppeteer_c
 ```
 
 #### **Limpar dados persistentes:**
+
 ```bash
 # Remover cache e dados de sessão
 rm -rf chrome-user-data/

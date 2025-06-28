@@ -14,14 +14,14 @@ import { ToolName, MCPError, ErrorCode } from './types.js';
 
 export interface ToolContext {
   toolName: ToolName;
-  args: any;
+  args: Record<string, unknown>;
   startTime: number;
-  metadata: Map<string, any>;
+  metadata: Map<string, unknown>;
 }
 
 export interface ToolResponse {
   content: Array<{ type: string; text?: string }>;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export type Middleware = (
@@ -29,7 +29,9 @@ export type Middleware = (
   next: () => Promise<ToolResponse>,
 ) => Promise<ToolResponse>;
 
-export type ToolHandler = (args: any) => Promise<ToolResponse>;
+export type ToolHandler = (
+  args: Record<string, unknown>,
+) => Promise<ToolResponse>;
 
 // ==================== Middleware Implementation ====================
 
@@ -47,7 +49,7 @@ export class MiddlewareManager {
    * Compose middlewares and handler
    */
   compose(handler: ToolHandler): ToolHandler {
-    return async (args: any) => {
+    return async (args: Record<string, unknown>) => {
       let index = -1;
 
       const dispatch = async (i: number): Promise<ToolResponse> => {

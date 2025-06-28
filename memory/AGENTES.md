@@ -2,13 +2,14 @@
 
 ## 🎯 **Visão Geral**
 
-O Sistema de Agentes Autônomos é uma extensão avançada do user-tools-gemini que adiciona **inteligência artificial autonoma** ao conjunto de ferramentas de automação web. 
+O Sistema de Agentes Autônomos é uma extensão avançada do user-tools-gemini que adiciona **inteligência artificial autonoma** ao conjunto de ferramentas de automação web.
 
 ### **O que são Agentes Autônomos?**
 
 Agentes autônomos são **entidades de software inteligentes** que:
+
 - 🧠 **Aprendem com experiência** (tentativas e sucessos)
-- 🎯 **Executam tarefas complexas** autonomamente 
+- 🎯 **Executam tarefas complexas** autonomamente
 - 📊 **Adaptam comportamento** baseado em contexto
 - 💾 **Persistem conhecimento** entre sessões
 - 🔄 **Melhoram performance** continuamente
@@ -28,7 +29,8 @@ src/agents/
 
 ### **🔧 Componentes Principais**
 
-#### **1. EkyteNavigatorAgent** 
+#### **1. EkyteNavigatorAgent**
+
 Agente principal especializado em automação da plataforma Ekyte.
 
 ```typescript
@@ -41,6 +43,7 @@ class EkyteNavigatorAgent extends EventEmitter {
 ```
 
 #### **2. SkillSystem**
+
 Gerenciador de habilidades com aprendizado evolutivo.
 
 ```typescript
@@ -53,6 +56,7 @@ class SkillSystem {
 ```
 
 #### **3. Factory Functions**
+
 Criadores simplificados de agentes com presets.
 
 ```typescript
@@ -62,7 +66,7 @@ const agent = createEkyteAgentWithPreset('production');
 // Criação customizada
 const agent = createEkyteAgent({
   learningMode: 'active',
-  autoExplore: true
+  autoExplore: true,
 });
 ```
 
@@ -71,6 +75,7 @@ const agent = createEkyteAgent({
 ### **📚 8 Skills Pré-Configuradas**
 
 #### **🧭 Navegação (2 skills)**
+
 1. **Acessar Login Ekyte** (básico)
    - Navegar para página de login
    - Verificar elementos essenciais
@@ -82,6 +87,7 @@ const agent = createEkyteAgent({
    - Aguardar carregamento do dashboard
 
 #### **🎨 Interface (2 skills)**
+
 3. **Explorar Dashboard** (básico)
    - Varrer elementos da interface
    - Identificar seções principais
@@ -93,6 +99,7 @@ const agent = createEkyteAgent({
    - Categorizar funcionalidades
 
 #### **📋 Tarefas (2 skills)**
+
 5. **Acessar Lista de Tarefas** (básico)
    - Navegar para seção de tarefas
    - Carregar lista completa
@@ -104,12 +111,14 @@ const agent = createEkyteAgent({
    - Configurar opções avançadas
 
 #### **📊 Dados (1 skill)**
+
 7. **Extrair Dados da Tabela** (intermediário)
    - Identificar estrutura tabular
    - Extrair headers e dados
    - Formatear informações
 
 #### **🔍 Filtros (1 skill)**
+
 8. **Aplicar Filtros** (básico)
    - Localizar controles de filtro
    - Configurar critérios
@@ -118,6 +127,7 @@ const agent = createEkyteAgent({
 ### **📈 Sistema de Aprendizado**
 
 #### **Métricas de Skill:**
+
 ```json
 {
   "id": "acessar-login-ekyte",
@@ -131,12 +141,14 @@ const agent = createEkyteAgent({
 ```
 
 #### **Níveis de Confiança:**
+
 - **0.0 - 0.3**: 🔴 Skill não confiável
-- **0.3 - 0.6**: 🟡 Skill em aprendizado  
+- **0.3 - 0.6**: 🟡 Skill em aprendizado
 - **0.6 - 0.8**: 🟢 Skill confiável
 - **0.8 - 1.0**: 🟦 Skill dominada
 
 #### **Evolução Automática:**
+
 ```typescript
 // Skill melhora automaticamente com uso
 if (success) {
@@ -153,6 +165,7 @@ if (success) {
 ### **🛠️ Presets Disponíveis**
 
 #### **Development Preset** 🔧
+
 Otimizado para desenvolvimento e debugging:
 
 ```javascript
@@ -167,11 +180,13 @@ Otimizado para desenvolvimento e debugging:
 ```
 
 **📝 Casos de Uso:**
+
 - Desenvolvimento de novas skills
 - Debugging de comportamentos
 - Exploração de interfaces
 
 #### **Production Preset** 🏭
+
 Otimizado para ambiente de produção:
 
 ```javascript
@@ -186,11 +201,13 @@ Otimizado para ambiente de produção:
 ```
 
 **🎯 Casos de Uso:**
+
 - Automação em produção
 - Operações críticas
 - Performance otimizada
 
 #### **Testing Preset** 🧪
+
 Otimizado para testes automatizados:
 
 ```javascript
@@ -205,6 +222,7 @@ Otimizado para testes automatizados:
 ```
 
 **⚡ Casos de Uso:**
+
 - Testes automatizados
 - Validação rápida
 - CI/CD pipelines
@@ -212,6 +230,7 @@ Otimizado para testes automatizados:
 ## 🔧 **Ferramentas MCP Disponíveis**
 
 ### **1. `agents_create`** - Criar Agente
+
 Cria um novo agente EkyteNavigator com configuração específica.
 
 ```json
@@ -230,11 +249,13 @@ Cria um novo agente EkyteNavigator com configuração específica.
 ```
 
 **⚙️ Parâmetros:**
+
 - `agentId`: Identificador único do agente
 - `preset`: Preset de configuração (optional)
 - `config`: Configurações customizadas (optional)
 
 ### **2. `agents_list`** - Listar Agentes
+
 Lista todos os agentes ativos com métricas detalhadas.
 
 ```json
@@ -245,6 +266,7 @@ Lista todos os agentes ativos com métricas detalhadas.
 ```
 
 **📊 Retorna:**
+
 ```json
 {
   "agents": [
@@ -264,6 +286,7 @@ Lista todos os agentes ativos com métricas detalhadas.
 ```
 
 ### **3. `agents_execute_skill`** - Executar Skill
+
 Executa uma skill específica com contexto fornecido.
 
 ```json
@@ -281,12 +304,14 @@ Executa uma skill específica com contexto fornecido.
 ```
 
 **🎯 Contexto Opcional:**
+
 - `url`: URL específica para navegação
 - `screenshot`: Capturar screenshot durante execução
 - `timeout`: Timeout customizado para execução
 - `retries`: Número de tentativas em caso de falha
 
 ### **4. `agents_list_skills`** - Listar Skills
+
 Lista skills disponíveis com filtros avançados.
 
 ```json
@@ -304,6 +329,7 @@ Lista skills disponíveis com filtros avançados.
 ```
 
 **🔍 Filtros Disponíveis:**
+
 - `learned`: Skills já aprendidas (true/false)
 - `category`: Categoria específica
 - `difficulty`: Nível de dificuldade
@@ -381,7 +407,7 @@ data/
 ```typescript
 // Auto-save baseado no preset
 development: autoSaveInterval: 30000,  // 30 segundos
-production:  autoSaveInterval: 60000,  // 1 minuto  
+production:  autoSaveInterval: 60000,  // 1 minuto
 testing:     autoSaveInterval: 10000,  // 10 segundos
 ```
 
@@ -419,7 +445,7 @@ const customAgent = createEkyteAgent({
   autoSaveInterval: 45000,
   skillsFile: 'custom-skills.json',
   screenshotsDir: './screenshots/custom/',
-  logLevel: 'info'
+  logLevel: 'info',
 });
 ```
 
@@ -430,7 +456,7 @@ const customAgent = createEkyteAgent({
 const result = await customAgent.executeSkill('acessar-login-ekyte', {
   url: 'https://app.ekyte.io/login',
   screenshot: true,
-  timeout: 30000
+  timeout: 30000,
 });
 
 if (result.success) {
@@ -447,7 +473,9 @@ if (result.success) {
 const metrics = customAgent.getAnalytics();
 
 console.log(`🎯 Autonomia: ${metrics.autonomyLevel}%`);
-console.log(`📚 Skills aprendidas: ${metrics.learnedSkills}/${metrics.totalSkills}`);
+console.log(
+  `📚 Skills aprendidas: ${metrics.learnedSkills}/${metrics.totalSkills}`,
+);
 console.log(`⚡ Performance média: ${metrics.averageExecutionTime}ms`);
 console.log(`🎪 Sessões totais: ${metrics.totalSessions}`);
 ```
@@ -457,6 +485,7 @@ console.log(`🎪 Sessões totais: ${metrics.totalSessions}`);
 ### **📡 Eventos Disponíveis**
 
 #### **Eventos de Skill:**
+
 ```typescript
 agent.on('skillExecuted', (skillId, result) => {
   // Skill foi executada (sucesso ou falha)
@@ -472,6 +501,7 @@ agent.on('skillImproved', (skillId, oldConfidence, newConfidence) => {
 ```
 
 #### **Eventos de Sessão:**
+
 ```typescript
 agent.on('sessionStarted', (session) => {
   // Nova sessão foi iniciada
@@ -487,6 +517,7 @@ agent.on('sessionSaved', (sessionId) => {
 ```
 
 #### **Eventos de Sistema:**
+
 ```typescript
 agent.on('autonomyChanged', (oldLevel, newLevel) => {
   // Nível de autonomia mudou
@@ -506,18 +537,21 @@ agent.on('warning', (message) => {
 ### **🎯 Próximas Features**
 
 #### **v2.0 - Agentes Especializados**
+
 - 🌐 **WebAgent**: Agente genérico para qualquer site
 - 📧 **EmailAgent**: Especializado em automação de email
 - 📊 **DataAgent**: Focado em extração e análise de dados
 - 🔄 **WorkflowAgent**: Orquestrador de workflows complexos
 
 #### **v2.1 - Machine Learning**
+
 - 🧠 **Otimização de seletores** com ML
 - 📈 **Predição de comportamento** baseado em histórico
 - 🎯 **Auto-tuning de parâmetros** para melhor performance
 - 🔍 **Detecção automática** de mudanças em interfaces
 
 #### **v2.2 - Integrações Avançadas**
+
 - 🌐 **APIs externas** (Slack, Jira, GitHub)
 - 📊 **Dashboards de analytics** em tempo real
 - 🔄 **Integração com CI/CD** pipelines
@@ -545,4 +579,4 @@ O Sistema de Agentes Autônomos transforma o user-tools-gemini de uma **coleçã
 - 💾 **Preservar conhecimento** entre sessões e ambientes
 - 🔄 **Melhorar continuamente** sua performance
 
-**Resultado:** Automação verdadeiramente inteligente que evolui com o uso. 🚀✨ 
+**Resultado:** Automação verdadeiramente inteligente que evolui com o uso. 🚀✨

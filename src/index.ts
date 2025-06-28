@@ -80,7 +80,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     // Execute handler
-    const result = await handler(args as any);
+    const result = await handler(args as Record<string, unknown>);
 
     return result;
   } catch (error) {

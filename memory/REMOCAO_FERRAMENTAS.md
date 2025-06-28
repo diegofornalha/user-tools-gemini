@@ -234,7 +234,7 @@ node startup.cjs
 
 // DEPOIS:
 
-- O projeto tinha 7 ferramentas disponíveis  
+- O projeto tinha 7 ferramentas disponíveis
 - tools: allTools, // 🎉 TODAS as 7 ferramentas automaticamente
 ```
 
@@ -487,36 +487,43 @@ Após o caso `greeting`, removemos também a ferramenta `open_browser`, que esta
 ### **🔍 Diferença Crítica: Módulo Próprio vs. Módulo Compartilhado**
 
 #### **Caso 1: `greeting` (Módulo Próprio)**
+
 ```
 src/tools/greeting/     # ✅ Módulo próprio
 └── index.ts           # Contém apenas a ferramenta greeting
 ```
+
 **Solução:** Deletar pasta inteira (`rm -rf src/tools/greeting/`)
 
 #### **Caso 2: `open_browser` (Módulo Compartilhado)**
+
 ```
 src/tools/puppeteer/   # ❌ Módulo compartilhado
 └── index.ts           # Contém 7 ferramentas, incluindo open_browser
 ```
+
 **Solução:** Edição manual seletiva de componentes específicos
 
 ### **📋 Processo Refinado para Módulo Compartilhado**
 
 #### **Passo 1: Identificar Componentes da Ferramenta**
+
 ```bash
 # Buscar todas as referências
 grep -n "open_browser\|OpenBrowser" src/tools/puppeteer/index.ts
 ```
 
 **Resultado encontrado:**
+
 - ✅ Schema: `OpenBrowserSchema`
-- ✅ Handler: `handleOpenBrowser()`  
+- ✅ Handler: `handleOpenBrowser()`
 - ✅ Metadados: entrada no array `puppeteerTools`
 - ✅ Imports: `exec`, `promisify` (só usados por esta ferramenta)
 
 #### **Passo 2: Remoção Seletiva (Ordem Importante!)**
 
 1️⃣ **Remover Schema:**
+
 ```typescript
 // ❌ REMOVER
 export const OpenBrowserSchema = z.object({
@@ -525,6 +532,7 @@ export const OpenBrowserSchema = z.object({
 ```
 
 2️⃣ **Remover Handler:**
+
 ```typescript
 // ❌ REMOVER - Função completa
 export async function handleOpenBrowser(params: { url: string }) {
@@ -533,6 +541,7 @@ export async function handleOpenBrowser(params: { url: string }) {
 ```
 
 3️⃣ **Remover Metadados:**
+
 ```typescript
 // ❌ REMOVER - Entrada do array
 {
@@ -543,6 +552,7 @@ export async function handleOpenBrowser(params: { url: string }) {
 ```
 
 4️⃣ **Remover Imports Não Utilizados:**
+
 ```typescript
 // ❌ REMOVER - Imports que só esta ferramenta usava
 import { exec } from 'child_process';
@@ -553,6 +563,7 @@ const execAsync = promisify(exec);
 ### **⚠️ Armadilhas Descobertas: Módulo Compartilhado**
 
 #### **❌ Erro Novo: Imports Órfãos**
+
 ```bash
 # Erro de compilação:
 src/tools/puppeteer/index.ts:21:7 - error TS6133: 'execAsync' is declared but its value is never read.
@@ -561,38 +572,43 @@ src/tools/puppeteer/index.ts:21:7 - error TS6133: 'execAsync' is declared but it
 **Problema:** Quando removemos a ferramenta, imports que só ela usava ficaram órfãos.
 
 **Solução:** Sempre verificar e remover imports não utilizados:
+
 ```bash
 # Após remoção, verificar imports órfãos
 npm run build  # Vai mostrar os erros TS6133
 ```
 
 #### **❌ Erro Novo: Ordem de Remoção Importa**
+
 Se remover o handler antes de remover as referências no agregador:
+
 ```typescript
 // Isso causa erro se handler já foi removido:
 export const toolHandlers = {
-  open_browser: handleOpenBrowser,  // ❌ handleOpenBrowser não existe mais
-}
+  open_browser: handleOpenBrowser, // ❌ handleOpenBrowser não existe mais
+};
 ```
 
 **Solução:** Ordem correta:
+
 1. Remover do agregador (`src/tools/index.ts`)
 2. Depois remover do módulo específico
 
 ### **📊 Comparação: Dois Tipos de Remoção**
 
-| Aspecto | Módulo Próprio (`greeting`) | Módulo Compartilhado (`open_browser`) |
-|---------|----------------------------|----------------------------------------|
-| **Complexidade** | 🟢 Simples | 🟡 Moderada |
-| **Arquivos afetados** | 2 arquivos | 2 arquivos |
-| **Comando principal** | `rm -rf pasta/` | Edição manual seletiva |
-| **Imports órfãos** | ❌ Não acontece | ✅ Possível, verificar |
-| **Schemas** | ❌ Removidos com pasta | ✅ Devem ser removidos manualmente |
-| **Risco de erro** | 🟢 Baixo | 🟡 Médio |
+| Aspecto               | Módulo Próprio (`greeting`) | Módulo Compartilhado (`open_browser`) |
+| --------------------- | --------------------------- | ------------------------------------- |
+| **Complexidade**      | 🟢 Simples                  | 🟡 Moderada                           |
+| **Arquivos afetados** | 2 arquivos                  | 2 arquivos                            |
+| **Comando principal** | `rm -rf pasta/`             | Edição manual seletiva                |
+| **Imports órfãos**    | ❌ Não acontece             | ✅ Possível, verificar                |
+| **Schemas**           | ❌ Removidos com pasta      | ✅ Devem ser removidos manualmente    |
+| **Risco de erro**     | 🟢 Baixo                    | 🟡 Médio                              |
 
 ### **🧩 Template Atualizado: Detecção do Tipo**
 
 #### **Etapa 0: Identificar Tipo de Módulo**
+
 ```bash
 # 1. Encontrar onde a ferramenta está definida
 find src/tools -name "*.ts" -exec grep -l "NOME_DA_FERRAMENTA" {} \;
@@ -611,6 +627,7 @@ ls -la src/tools/ | grep NOME_DA_FERRAMENTA
 #### **✅ Sucesso da Remoção:**
 
 **Estado final:**
+
 ```bash
 # Verificação: 7 ferramentas (era 8)
 echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | node build/index.js | jq '.result.tools | length'
@@ -618,7 +635,7 @@ echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | node build/index.js
 
 # Ferramentas restantes:
 "puppeteer_navigate"     ✅
-"puppeteer_screenshot"   ✅  
+"puppeteer_screenshot"   ✅
 "puppeteer_click"        ✅
 "puppeteer_type"         ✅
 "puppeteer_get_content"  ✅
@@ -626,14 +643,16 @@ echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | node build/index.js
 ```
 
 #### **🎓 Novos Learnings Aplicados:**
+
 - ✅ Remoção seletiva em módulo compartilhado
-- ✅ Detecção e remoção de imports órfãos  
+- ✅ Detecção e remoção de imports órfãos
 - ✅ Ordem correta de remoção
 - ✅ Validação de schemas específicos
 
 ### **📚 Documentação Atualizada:**
 
 Atualizamos também toda a documentação:
+
 - `README.md`: 7 ferramentas (era 8)
 - `EXPANSAO_FERRAMENTAS.md`: Referencias corrigidas
 - `REMOCAO_FERRAMENTAS.md`: Este novo caso de uso
@@ -641,8 +660,9 @@ Atualizamos também toda a documentação:
 ---
 
 **Conclusão Expandida**: Este documento agora cobre **três cenários completos** de remoção:
+
 1. **Módulo próprio** (`greeting`) - Ferramenta de demonstração
-2. **Módulo compartilhado** (`open_browser`) - Processo complexo  
+2. **Módulo compartilhado** (`open_browser`) - Processo complexo
 3. **Módulo próprio** (`browser_open_url`) - Substituição por ferramenta avançada
 
 Qualquer ferramenta futura pode ser removida seguindo um destes três padrões, garantindo remoção segura e completa. 🚀
@@ -672,29 +692,34 @@ Ferramentas totais: 6
 ### **🔧 Processo Executado:**
 
 #### **Tipo Identificado:** Módulo Próprio ✅
+
 - Ferramenta localizada em: `src/tools/browser/`
 - Estratégia aplicada: Remoção completa do módulo (igual ao caso `greeting`)
 
 #### **Passos Executados:**
 
 1️⃣ **Verificação inicial:**
+
 ```bash
 echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | node build/index.js | jq '.result.tools | length'
 # Resultado: 7 ferramentas
 ```
 
 2️⃣ **Localização da ferramenta:**
+
 ```bash
 find src/tools -name "*.ts" -exec grep -l "browser_open_url" {} \;
 # Resultado: src/tools/browser/index.ts, src/tools/index.ts
 ```
 
 3️⃣ **Remoção do módulo:**
+
 ```bash
 rm -rf src/tools/browser/
 ```
 
 4️⃣ **Atualização do agregador:**
+
 - ❌ Removido: `import { browserTools } from './browser/index.js';`
 - ❌ Removido: `export { browserTools, handleOpenUrl } from './browser/index.js';`
 - ❌ Removido: `...browserTools` do array `allTools`
@@ -702,12 +727,14 @@ rm -rf src/tools/browser/
 - ❌ Removido: `browser_open_url: handleOpenUrl` do `toolHandlers`
 
 5️⃣ **Recompilação:**
+
 ```bash
 npm run build
 # Resultado: ✅ Sucesso, sem erros
 ```
 
 6️⃣ **Verificação final:**
+
 ```bash
 echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | node build/index.js | jq '.result.tools | length'
 # Resultado: 6 ✅ (era 7)
@@ -720,7 +747,7 @@ node startup.cjs
 
 ```
 "puppeteer_navigate"     ✅
-"puppeteer_screenshot"   ✅  
+"puppeteer_screenshot"   ✅
 "puppeteer_click"        ✅
 "puppeteer_type"         ✅
 "puppeteer_get_content"  ✅
@@ -745,8 +772,9 @@ node startup.cjs
 ---
 
 **Conclusão Expandida**: Este documento agora cobre **três cenários completos** de remoção:
+
 1. **Módulo próprio** (`greeting`) - Ferramenta de demonstração
-2. **Módulo compartilhado** (`open_browser`) - Processo complexo  
+2. **Módulo compartilhado** (`open_browser`) - Processo complexo
 3. **Módulo próprio** (`browser_open_url`) - Substituição por ferramenta avançada
 
 Qualquer ferramenta futura pode ser removida seguindo um destes três padrões, garantindo remoção segura e completa. 🚀

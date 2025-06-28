@@ -23,8 +23,8 @@ import {
 interface ToolConfig {
   name: ToolName;
   description: string;
-  handler: (args: any) => Promise<any>;
-  schema?: any;
+  handler: (args: Record<string, unknown>) => Promise<Record<string, unknown>>;
+  schema?: z.ZodObject<z.ZodRawShape>;
   metadata?: {
     isReadOnly?: boolean;
     isDestructive?: boolean;
@@ -78,22 +78,24 @@ export class ToolFactory {
    */
   static getByCategory(category: string): ToolDefinition[] {
     return Array.from(this.tools.entries())
-      .filter(([_, config]) => config.metadata?.category === category)
-      .map(([name, _]) => this.create(name))
+      .filter(([_name, config]) => config.metadata?.category === category)
+      .map(([name, _config]) => this.create(name))
       .filter((tool): tool is ToolDefinition => tool !== null);
   }
 
   /**
    * Convert Zod schema to JSON Schema properties
    */
-  private static schemaToProperties(schema: any): Record<string, any> {
+  private static schemaToProperties(
+    schema: z.ZodObject<z.ZodRawShape>,
+  ): Record<string, unknown> {
     if (!schema || !schema._def) return {};
 
     const shape = schema._def.shape?.() || {};
-    const properties: Record<string, any> = {};
+    const properties: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(shape)) {
-      properties[key] = this.zodToJsonSchema(value as any);
+      properties[key] = this.zodToJsonSchema(value as z.ZodTypeAny);
     }
 
     return properties;
@@ -102,14 +104,14 @@ export class ToolFactory {
   /**
    * Get required fields from Zod schema
    */
-  private static getRequiredFields(schema: any): string[] {
+  private static getRequiredFields(schema: z.ZodObject<z.ZodRawShape>): string[] {
     if (!schema || !schema._def) return [];
 
     const shape = schema._def.shape?.() || {};
     const required: string[] = [];
 
     for (const [key, value] of Object.entries(shape)) {
-      const zodSchema = value as any;
+      const zodSchema = value as z.ZodTypeAny;
       if (!zodSchema.isOptional()) {
         required.push(key);
       }
@@ -121,7 +123,7 @@ export class ToolFactory {
   /**
    * Convert Zod type to JSON Schema
    */
-  private static zodToJsonSchema(zod: any): any {
+  private static zodToJsonSchema(zod: z.ZodTypeAny): Record<string, unknown> {
     const typeName = zod._def.typeName;
 
     switch (typeName) {

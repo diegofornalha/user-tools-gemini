@@ -108,7 +108,7 @@ export async function toResult<T, E = Error>(
  * @param message Optional message
  * @returns Formatted tool result
  */
-export function successResponse<T = any>(
+export function successResponse<T = unknown>(
   data: T,
   message?: string,
 ): ToolResult<T> {
@@ -141,7 +141,7 @@ export function successResponse<T = any>(
 export function errorResponse(
   code: ErrorCode,
   message: string,
-  details?: any,
+  details?: unknown,
 ): ToolResult {
   const error = new MCPError(code, message, details);
 
@@ -162,8 +162,11 @@ export function errorResponse(
  * @param fns Functions to pipe
  * @returns The final result
  */
-export function pipe<T, R>(value: T, ...fns: Array<(v: any) => any>): R {
-  return fns.reduce((acc, fn) => fn(acc), value as any) as R;
+export function pipe<T, R>(
+  value: T,
+  ...fns: Array<(v: unknown) => unknown>
+): R {
+  return fns.reduce((acc, fn) => fn(acc), value as unknown) as R;
 }
 
 /**
@@ -173,8 +176,11 @@ export function pipe<T, R>(value: T, ...fns: Array<(v: any) => any>): R {
  * @param fns Functions to compose
  * @returns Composed function
  */
-export function compose<T, R>(...fns: Array<(v: any) => any>): (value: T) => R {
-  return (value: T) => fns.reduceRight((acc, fn) => fn(acc), value as any) as R;
+export function compose<T, R>(
+  ...fns: Array<(v: unknown) => unknown>
+): (value: T) => R {
+  return (value: T) =>
+    fns.reduceRight((acc, fn) => fn(acc), value as unknown) as R;
 }
 
 // ==================== Async Helpers ====================
@@ -196,7 +202,7 @@ export function sleep(ms: number): Promise<void> {
  * @param delay Debounce delay in ms
  * @returns Debounced function
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   fn: T,
   delay: number,
 ): (...args: Parameters<T>) => void {
@@ -215,7 +221,7 @@ export function debounce<T extends (...args: any[]) => any>(
  * @param limit Time limit in ms
  * @returns Throttled function
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   fn: T,
   limit: number,
 ): T {

@@ -39,7 +39,7 @@ export const ToolSchemas = {
   [ToolName.PUPPETEER_SCREENSHOT]: ScreenshotSchema,
   [ToolName.PUPPETEER_CLICK]: ClickSchema,
   [ToolName.PUPPETEER_TYPE]: TypeSchema,
-  [ToolName.PUPPETEER_GET_CONTENT]: z.object({}),
+  [ToolName.PUPPETEER_GET_CONTENT]: z.object({}).strict(),
 } as const;
 
 // ==================== Validation Helper ====================
