@@ -6,8 +6,7 @@
 
 import puppeteer, { Browser, Page } from 'puppeteer';
 import { z } from 'zod';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+
 import { successResponse } from '../../utils.js';
 import {
   NavigateParams,
@@ -17,8 +16,6 @@ import {
   MCPError,
   ErrorCode,
 } from '../../types.js';
-
-const execAsync = promisify(exec);
 
 // Schemas de validação
 export const NavigateSchema = z.object({
@@ -37,10 +34,6 @@ export const ClickSchema = z.object({
 export const TypeSchema = z.object({
   selector: z.string().min(1, 'Seletor CSS é obrigatório'),
   text: z.string(),
-});
-
-export const OpenBrowserSchema = z.object({
-  url: z.string().url('URL inválida fornecida'),
 });
 
 // Estado do browser
@@ -196,26 +189,6 @@ export async function handleNewTab(params: NavigateParams) {
   );
 }
 
-// Função para abrir URL no navegador padrão do sistema
-export async function handleOpenBrowser(params: { url: string }) {
-  const validated = OpenBrowserSchema.parse(params);
-
-  try {
-    // Usa o comando 'open' do macOS para abrir a URL no navegador padrão
-    await execAsync(`open "${validated.url}"`);
-
-    return successResponse(
-      { url: validated.url },
-      `URL ${validated.url} aberta no navegador padrão do sistema`,
-    );
-  } catch (error) {
-    throw new MCPError(
-      ErrorCode.INTERNAL_ERROR,
-      `Falha ao abrir navegador: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
-    );
-  }
-}
-
 // Metadados das ferramentas Puppeteer
 export const puppeteerTools = [
   {
@@ -286,17 +259,6 @@ export const puppeteerTools = [
       type: 'object',
       properties: {
         url: { type: 'string', description: 'URL to open in new tab' },
-      },
-      required: ['url'],
-    },
-  },
-  {
-    name: 'open_browser',
-    description: 'Open URL in the system default browser',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        url: { type: 'string', description: 'URL to open in default browser' },
       },
       required: ['url'],
     },

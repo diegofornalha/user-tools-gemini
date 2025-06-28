@@ -2,18 +2,19 @@
 
 Um servidor MCP (Model Context Protocol) que fornece ferramentas de automação web e navegador para agentes de IA.
 
-## 🚀 Ferramentas Disponíveis (8 total)
+## 🚀 Ferramentas Disponíveis (7 total)
 
-### 🔧 Categoria Puppeteer (7 ferramentas)
+### 🔧 Categoria Puppeteer (6 ferramentas)
+
 - `puppeteer_navigate` - Navegar para uma URL
 - `puppeteer_screenshot` - Tirar screenshot da página atual
 - `puppeteer_click` - Clicar em um elemento
 - `puppeteer_type` - Digitar texto em um elemento
 - `puppeteer_get_content` - Obter conteúdo HTML da página
 - `puppeteer_new_tab` - Abrir URL em nova aba
-- `open_browser` - Abrir URL no navegador padrão do sistema
 
 ### 🌐 Categoria Browser Nativo (1 ferramenta)
+
 - `browser_open_url` - Abrir URL em navegador específico (Chrome, Safari, Firefox)
 
 ## 📦 Instalação
@@ -26,6 +27,7 @@ npm run build
 ## 🧪 Teste
 
 Verificar ferramentas disponíveis:
+
 ```bash
 echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | node build/index.js | jq '.result.tools[] | .name'
 ```
@@ -59,4 +61,4 @@ src/
 
 ## ⚖️ Licença
 
-MIT 
+MIT
