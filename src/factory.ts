@@ -78,8 +78,8 @@ export class ToolFactory {
    */
   static getByCategory(category: string): ToolDefinition[] {
     return Array.from(this.tools.entries())
-      .filter(([_name, config]) => config.metadata?.category === category)
-      .map(([name, _config]) => this.create(name))
+      .filter(([, config]) => config.metadata?.category === category)
+      .map(([name]) => this.create(name))
       .filter((tool): tool is ToolDefinition => tool !== null);
   }
 
@@ -104,7 +104,9 @@ export class ToolFactory {
   /**
    * Get required fields from Zod schema
    */
-  private static getRequiredFields(schema: z.ZodObject<z.ZodRawShape>): string[] {
+  private static getRequiredFields(
+    schema: z.ZodObject<z.ZodRawShape>,
+  ): string[] {
     if (!schema || !schema._def) return [];
 
     const shape = schema._def.shape?.() || {};

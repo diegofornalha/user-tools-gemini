@@ -67,6 +67,7 @@ export class SkillSystem {
   // ================== PERSISTÊNCIA ==================
 
   async loadSkills(): Promise<void> {
+    console.log('Attempting to load skills... (skill-system.ts)');
     try {
       const data = await fs.readFile(this.skillsFile, 'utf-8');
       const skillsData = JSON.parse(data);
@@ -78,7 +79,7 @@ export class SkillSystem {
       }
 
       console.log(`✅ Carregadas ${this.skills.size} skills do arquivo`);
-    } catch (_error) {
+    } catch (error) {
       console.log('📝 Arquivo de skills não encontrado, inicializando novo...');
       this.skills.clear();
     }
@@ -348,6 +349,7 @@ export class SkillSystem {
         await this.createSkill(skillData);
       }
     }
+    await this.saveSkills();
   }
 
   // ================== GERENCIAMENTO DE SKILLS ==================
@@ -378,7 +380,6 @@ export class SkillSystem {
     }
 
     this.skills.set(skill.id, skill);
-    await this.saveSkills();
 
     console.log(
       `📚 Nova skill criada: ${skill.name} (${skill.category}/${skill.difficulty})`,
@@ -516,9 +517,7 @@ export class SkillSystem {
       skill.confidence = Math.max(skill.confidence, result.confidence);
       skill.evidence.push(finalScreenshot || 'execution-success');
     } catch (error) {
-      result.success = false;
-      result.observations.push(`❌ Erro: ${error}`);
-      console.error(`Erro na execução da skill ${skill.name}:`, error);
+      console.warn('Aviso ao criar diretórios:', error);
     }
 
     result.timeElapsed = Date.now() - startTime;
@@ -619,11 +618,11 @@ export class SkillSystem {
         success: true,
         result,
       };
-    } catch (_error) {
+    } catch (error) {
       return {
         action,
         success: false,
-        error: String(_error),
+        error: String(error),
       };
     }
   }

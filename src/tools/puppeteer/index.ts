@@ -152,7 +152,7 @@ async function tryConnectToExistingBrowser(): Promise<Browser | null> {
 
     console.log('✅ Conectado ao Chrome existente na porta 9222');
     return browser;
-  } catch (_error) {
+  } catch {
     console.log('ℹ️ Nenhuma instância do Chrome encontrada, criando nova...');
     return null;
   }
@@ -528,7 +528,7 @@ export async function handleGetText(params: {
   const element = await page.$(validated.selector);
   if (!element) {
     throw new MCPError(
-      ErrorCode.INTERNAL_ERROR,
+      ErrorCode.INTERNALerror,
       `Elemento não encontrado: ${validated.selector}`,
     );
   }
@@ -557,7 +557,7 @@ export async function handleGetAttribute(params: {
   const element = await page.$(validated.selector);
   if (!element) {
     throw new MCPError(
-      ErrorCode.INTERNAL_ERROR,
+      ErrorCode.INTERNALerror,
       `Elemento não encontrado: ${validated.selector}`,
     );
   }
@@ -628,7 +628,7 @@ export async function handleSwitchTab(params: { tabIndex: number }) {
 
   if (validated.tabIndex >= pages.length) {
     throw new MCPError(
-      ErrorCode.INTERNAL_ERROR,
+      ErrorCode.INTERNALerror,
       `Aba ${validated.tabIndex} não existe. Total: ${pages.length}`,
     );
   }
@@ -636,7 +636,7 @@ export async function handleSwitchTab(params: { tabIndex: number }) {
   const targetPage = pages[validated.tabIndex];
   if (!targetPage) {
     throw new MCPError(
-      ErrorCode.INTERNAL_ERROR,
+      ErrorCode.INTERNALerror,
       `Aba ${validated.tabIndex} não encontrada`,
     );
   }
@@ -669,14 +669,14 @@ export async function handleCloseTab(params: { tabIndex?: number } = {}) {
   if (validated.tabIndex !== undefined) {
     if (validated.tabIndex >= pages.length) {
       throw new MCPError(
-        ErrorCode.INTERNAL_ERROR,
+        ErrorCode.INTERNALerror,
         `Aba ${validated.tabIndex} não existe. Total: ${pages.length}`,
       );
     }
     const selectedPage = pages[validated.tabIndex];
     if (!selectedPage) {
       throw new MCPError(
-        ErrorCode.INTERNAL_ERROR,
+        ErrorCode.INTERNALerror,
         `Aba ${validated.tabIndex} não encontrada`,
       );
     }

@@ -7,10 +7,50 @@ import {
   createEkyteAgent,
   createEkyteAgentWithPreset,
 } from '../../agents/index.js';
-import type { EkyteNavigatorAgent } from '../../agents/ekyte-navigator.js';
+import { EkyteNavigatorAgent } from '../../agents/ekyte-navigator.js';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 // Estado global dos agentes
 const activeAgents = new Map<string, EkyteNavigatorAgent>();
+const AGENTS_FILE = path.join(process.cwd(), 'data', 'active-agents.json');
+
+// Helper functions for persistence
+async function loadActiveAgents(): Promise<void> {
+  try {
+    const data = await fs.readFile(AGENTS_FILE, 'utf-8');
+    const savedAgents: Array<{ id: string; config: any }> = JSON.parse(data);
+    console.log('Loaded agents raw data:', savedAgents);
+    activeAgents.clear();
+    for (const { id, config } of savedAgents) {
+      const agent = new EkyteNavigatorAgent(config);
+      await agent.initialize();
+      activeAgents.set(id, agent);
+    }
+    console.log(`Loaded ${activeAgents.size} agents from ${AGENTS_FILE}`);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      console.log('No active agents file found, starting fresh.');
+    } else {
+      console.error('Error loading active agents:', error);
+    }
+  }
+}
+
+async function saveActiveAgents(): Promise<void> {
+  try {
+    const agentsToSave = Array.from(activeAgents.entries()).map(([id, agent]) => ({
+      id,
+      config: agent['config'], // Access the private config property
+    }));
+    console.log('Saving agents:', agentsToSave);
+    await fs.mkdir(path.dirname(AGENTS_FILE), { recursive: true });
+    await fs.writeFile(AGENTS_FILE, JSON.stringify(agentsToSave, null, 2), 'utf-8');
+    console.log(`Saved ${agentsToSave.length} agents to ${AGENTS_FILE}`);
+  } catch (error) {
+    console.error('Error saving active agents:', error);
+  }
+}
 
 // Schemas
 const CreateAgentSchema = z.object({
@@ -34,6 +74,8 @@ export async function handleCreateAgent(params: {
 }) {
   const validated = CreateAgentSchema.parse(params);
 
+  await loadActiveAgents();
+
   if (activeAgents.has(validated.agentId)) {
     throw new Error(`Agente ${validated.agentId} já existe`);
   }
@@ -44,17 +86,29 @@ export async function handleCreateAgent(params: {
   } else {
     agent = await createEkyteAgent({});
   }
+  await agent.initialize();
+  const skillCount = agent.getSkillSystem().listSkills().length;
+  console.log(
+    `Agente ${validated.agentId} inicializado com sucesso. Habilidades carregadas: ${skillCount}.`,
+  );
   activeAgents.set(validated.agentId, agent);
+  console.log('activeAgents after create:', Array.from(activeAgents.keys()));
+
+  await saveActiveAgents();
 
   return {
     success: true,
     agentId: validated.agentId,
-    status: agent.getStatus(),
-    activeAgents: Array.from(activeAgents.keys()), // Retorna apenas os IDs dos agentes
+    status: {
+      ...agent.getStatus(),
+      skillsLoaded: agent.getSkillSystem().listSkills().length,
+    },
+    activeAgents: Array.from(activeAgents.keys()),
   };
 }
 
 export async function handleListAgents() {
+  await loadActiveAgents();
   const agents = Array.from(activeAgents.entries()).map(([id, agent]) => ({
     id,
     status: agent.getStatus(),
@@ -71,6 +125,7 @@ export async function handleExecuteSkill(params: {
   agentId: string;
   skillName: string;
 }) {
+  await loadActiveAgents();
   const validated = ExecuteSkillSchema.parse(params);
 
   const agent = activeAgents.get(validated.agentId);
@@ -100,6 +155,7 @@ export async function handleExecuteSkill(params: {
 }
 
 export async function handleListSkills(params: { agentId: string }) {
+  await loadActiveAgents();
   const validated = AgentActionSchema.parse(params);
 
   const agent = activeAgents.get(validated.agentId);
@@ -109,6 +165,7 @@ export async function handleListSkills(params: { agentId: string }) {
 
   const skillSystem = agent.getSkillSystem();
   const skills = skillSystem.listSkills();
+  console.log('Skills from agent.getSkillSystem().listSkills():', skills);
 
   return {
     agentId: validated.agentId,

@@ -60,7 +60,7 @@ export class EkyteNavigatorAgent extends EventEmitter {
   // ================== INICIALIZAÇÃO ==================
 
   async initialize(): Promise<void> {
-    console.log(`🚀 Inicializando ${this.config.name}...`);
+    console.log(`🚀 Inicializando ${this.config.name}... (ekyte-navigator.ts)`);
 
     try {
       await this.ensureDirectories();
@@ -84,9 +84,9 @@ export class EkyteNavigatorAgent extends EventEmitter {
         agent: this.config.name,
         autonomyLevel: this.autonomyLevel,
       });
-    } catch (_error) {
-      console.error('❌ Erro na inicialização:', _error);
-      throw _error;
+    } catch (error) {
+      console.error('❌ Erro na inicialização:', error);
+      throw error;
     }
   }
 
@@ -111,8 +111,8 @@ export class EkyteNavigatorAgent extends EventEmitter {
       console.log(`📈 Nível de autonomia aumentou para ${newLevel}%`);
     });
 
-    this.on('error', (_error: Error) => {
-      console.error('🚨 Erro no agente:', _error);
+    this.on('error', (error: Error) => {
+      console.error('🚨 Erro no agente:', error);
     });
   }
 
@@ -189,7 +189,7 @@ export class EkyteNavigatorAgent extends EventEmitter {
     try {
       await fs.readFile(this.sessionsFile, 'utf-8');
       console.log('📂 Histórico de sessões carregado');
-    } catch (_error) {
+    } catch (error) {
       console.log('📝 Arquivo de sessões não encontrado, criando novo...');
     }
   }
@@ -213,8 +213,8 @@ export class EkyteNavigatorAgent extends EventEmitter {
       sessions = sessions.slice(-50);
 
       await fs.writeFile(this.sessionsFile, JSON.stringify(sessions, null, 2));
-    } catch (_error) {
-      console.error('❌ Erro ao salvar sessões:', _error);
+    } catch (error) {
+      console.error('❌ Erro ao salvar sessões:', error);
     }
   }
 
@@ -249,8 +249,8 @@ export class EkyteNavigatorAgent extends EventEmitter {
       }
 
       return fullPath;
-    } catch (_error) {
-      console.warn('⚠️  Erro ao capturar screenshot:', _error);
+    } catch (error) {
+      console.warn('⚠️  Erro ao capturar screenshot:', error);
       return null;
     }
   }
@@ -279,8 +279,8 @@ export class EkyteNavigatorAgent extends EventEmitter {
       if (this.currentSession) {
         await this.saveSessions();
       }
-    } catch (_error) {
-      console.error('❌ Erro no auto-save:', _error);
+    } catch (error) {
+      console.error('❌ Erro no auto-save:', error);
     }
   }
 
