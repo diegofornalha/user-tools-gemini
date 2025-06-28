@@ -157,6 +157,19 @@ export class EkyteNavigatorAgent extends EventEmitter {
     return session;
   }
 
+  async delegateTask(agentId: string, skillName: string, params: Record<string, unknown>) {
+      console.log(`Delegating task ${skillName} to agent ${agentId}`);
+      return await handleDelegateTask({ agentId, skillName, params });
+  }
+
+  async decideExecutionStrategy(skillName: string) {
+      const skill = this.skillSystem.getSkillByName(skillName);
+      if (skill && skill.confidence > 0.8) {
+          return { strategy: 'local', skillId: skill.id };
+      }
+      return { strategy: 'delegate', skillName };
+  }
+
   async endSession(): Promise<EkyteSession | null> {
     if (!this.currentSession) {
       return null;

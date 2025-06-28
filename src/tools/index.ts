@@ -90,6 +90,8 @@ import {
 import { agentsHandlers } from './agents/index.js';
 import { memoryManagerHandlers } from '../agents/memory_manager_agent.js';
 
+import { a2aHandlers } from './a2a/index.js';
+
 export const toolHandlers = {
   // Básicos
   puppeteer_navigate: handleNavigate,
@@ -130,4 +132,5 @@ export const toolHandlers = {
   // Agentes
   ...agentsHandlers,
   ...memoryManagerHandlers,
+  ...a2aHandlers,
 } as const;

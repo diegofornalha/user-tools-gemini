@@ -2,7 +2,7 @@
 
 Um servidor MCP (Model Context Protocol) que fornece ferramentas avançadas de automação web e navegador para agentes de IA.
 
-## 🎯 **Ferramentas Disponíveis (28 total)** 🆕
+## 🎯 **Ferramentas Disponíveis (31 total)** 🆕
 
 ### 🤖 **Agentes Autônomos (4 ferramentas)**
 
