@@ -27,7 +27,9 @@
     "pretest": "npm run build",
     "test": "INTEGRATION_TEST_FILE_DIR=integration-tests/output NODE_OPTIONS=--experimental-vm-modules jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "start:a2a": "tsc src/a2a/server.ts --outDir build && node build/a2a/server.js",
+    "run:a2a-client-example": "tsc src/a2a/example-client.ts --outDir build && node build/a2a/example-client.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",

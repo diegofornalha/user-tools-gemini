@@ -40,8 +40,8 @@ export class SkillSystem {
   private confidence_threshold: number = 0.7;
 
   constructor(
-    dataDir: string = './data',
-    screenshotsDir: string = './screenshots',
+    dataDir: string = path.resolve(__dirname, '../../data'),
+    screenshotsDir: string = path.resolve(__dirname, '../../screenshots'),
   ) {
     this.skillsFile = path.join(dataDir, 'ekyte-skills.json');
     this.screenshotsDir = screenshotsDir;

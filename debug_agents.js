@@ -1,16 +1,42 @@
 
 
 import { agentsHandlers } from './build/tools/agents/index.js';
+import { A2AClient } from '@a2a-js/sdk';
+
+// --- Helper function to connect an agent to the A2A Host ---
+async function connectAgentToHost(agentId) {
+  try {
+    const client = new A2AClient({ agentId });
+    await client.connect();
+    console.log(`✅ Agent '${agentId}' connected to A2A Host.`);
+    return client;
+  } catch (error) {
+    console.error(`❌ Failed to connect agent '${agentId}' to A2A Host:`, error);
+    return null;
+  }
+}
 
 async function debugAgents() {
   try {
-    console.log('--- Attempting to create agent ---');
-    const createResult = await agentsHandlers.agents_create({ agentId: 'debug-agent' });
-    console.log('Create agent result:', JSON.stringify(createResult, null, 2));
+    // --- Create Agents ---
+    console.log('--- Creating agents ---');
+    const agent1 = await agentsHandlers.agents_create({ agentId: 'debug-agent' });
+    const agent2 = await agentsHandlers.agents_create({ agentId: 'task-agent' });
+    console.log('Agents created:', JSON.stringify([agent1, agent2], null, 2));
 
-    console.log('\n--- Attempting to list agents ---');
-    const listResult = await agentsHandlers.agents_list();
-    console.log('List agents result:', JSON.stringify(listResult, null, 2));
+    // --- Connect Agents to A2A Host ---
+    console.log('\n--- Connecting agents to A2A Host ---');
+    const client1 = await connectAgentToHost('debug-agent');
+    const client2 = await connectAgentToHost('task-agent');
+
+    // --- Verify Connections ---
+    if (client1 && client2) {
+        console.log('\n--- Listing agents on the network ---');
+        const networkAgents = await client1.listAgents();
+        console.log('Network agents:', JSON.stringify(networkAgents, null, 2));
+    } else {
+        console.error('Could not connect all agents. Aborting verification.');
+    }
 
   } catch (error) {
     console.error('Error during debugAgents:', error);
