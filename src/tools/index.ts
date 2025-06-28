@@ -19,15 +19,11 @@ export {
 // Browser Tools
 export { browserTools, handleOpenUrl } from './browser/index.js';
 
-// Greeting Tool
-export { greetingTools, handleGreeting } from './greeting/index.js';
-
 // Combinar todas as ferramentas
 import { puppeteerTools } from './puppeteer/index.js';
 import { browserTools } from './browser/index.js';
-import { greetingTools } from './greeting/index.js';
 
-export const allTools = [...puppeteerTools, ...browserTools, ...greetingTools];
+export const allTools = [...puppeteerTools, ...browserTools];
 
 // Mapa de handlers por nome da ferramenta
 import {
@@ -41,8 +37,6 @@ import {
 
 import { handleOpenUrl } from './browser/index.js';
 
-import { handleGreeting } from './greeting/index.js';
-
 export const toolHandlers = {
   // Puppeteer
   puppeteer_navigate: handleNavigate,
@@ -54,7 +48,4 @@ export const toolHandlers = {
 
   // Browser
   browser_open_url: handleOpenUrl,
-
-  // Greeting
-  greeting: handleGreeting,
 } as const;
