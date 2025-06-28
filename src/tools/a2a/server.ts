@@ -1,6 +1,6 @@
 
 import http from 'http';
-import { agentsHandlers } from '../tools/agents/index.js';
+import { agentsHandlers } from '../agents/index.js';
 
 const PORT = 8080; // Porta padrão para o servidor A2A
 
