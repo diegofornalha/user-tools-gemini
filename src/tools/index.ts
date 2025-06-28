@@ -38,13 +38,17 @@ export {
   handleSwitchTab,
   handleCloseTab,
   handleDuplicateTab,
+  // 🆕 Gestão de Chrome Persistente
+  handleClosePersistentBrowser,
+  handleGetBrowserStatus,
   startBrowserCleanup,
 } from './puppeteer/index.js';
 
 // Combinar todas as ferramentas
 import { puppeteerTools } from './puppeteer/index.js';
+import { agentsTools } from './agents/index.js';
 
-export const allTools = [...puppeteerTools];
+export const allTools = [...puppeteerTools, ...agentsTools];
 
 // Mapa de handlers por nome da ferramenta
 import {
@@ -73,7 +77,12 @@ import {
   handleSwitchTab,
   handleCloseTab,
   handleDuplicateTab,
+  // 🆕 Gestão de Chrome Persistente
+  handleClosePersistentBrowser,
+  handleGetBrowserStatus,
 } from './puppeteer/index.js';
+
+import { agentsHandlers } from './agents/index.js';
 
 export const toolHandlers = {
   // Básicos
@@ -107,4 +116,11 @@ export const toolHandlers = {
   puppeteer_switch_tab: handleSwitchTab,
   puppeteer_close_tab: handleCloseTab,
   puppeteer_duplicate_tab: handleDuplicateTab,
+  
+  // 🆕 Gestão de Chrome Persistente
+  puppeteer_close_persistent_browser: handleClosePersistentBrowser,
+  puppeteer_get_browser_status: handleGetBrowserStatus,
+  
+  // Agentes
+  ...agentsHandlers,
 } as const;

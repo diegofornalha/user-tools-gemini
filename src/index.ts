@@ -82,11 +82,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     // Execute handler
     const result = await handler(args as any);
 
-    // Ensure we return the expected format
-    if (!result.content) {
-      result.content = [];
-    }
-
     return result;
   } catch (error) {
     if (error instanceof MCPError) {

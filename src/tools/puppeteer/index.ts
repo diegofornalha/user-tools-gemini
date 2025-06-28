@@ -107,22 +107,71 @@ let page: Page | null = null;
 let pages: Page[] = [];
 let lastActivity = Date.now();
 
-// Configurações
-const BROWSER_TIMEOUT = 5 * 60 * 1000; // 5 minutos
+// Configurações para página persistente
+const BROWSER_TIMEOUT = 24 * 60 * 60 * 1000; // 24 horas (página persistente)
 const DEFAULT_VIEWPORT = { width: 1280, height: 720 };
 
+// 🆕 Configuração para Chrome persistente
 const BROWSER_CONFIG = {
   headless: false,
+  // 🆕 Conectar a instância existente ou criar nova
+  executablePath: undefined, // Usa Chrome padrão do sistema
+  userDataDir: './chrome-user-data', // 🆕 Diretório persistente de dados
+  args: [
+    '--no-first-run',
+    '--no-default-browser-check',
+    '--disable-default-apps',
+    '--disable-popup-blocking',
+    '--disable-translate',
+    '--disable-background-timer-throttling',
+    '--disable-renderer-backgrounding',
+    '--disable-backgrounding-occluded-windows',
+    '--disable-ipc-flooding-protection',
+    '--remote-debugging-port=9222', // 🆕 Porta para reconexão
+  ],
+  defaultViewport: DEFAULT_VIEWPORT,
+  // 🆕 Não fechar ao terminar processo
+  handleSIGINT: false,
+  handleSIGTERM: false,
+  handleSIGHUP: false,
 };
 
 /**
+ * 🆕 Tenta conectar a uma instância existente do Chrome
+ */
+async function tryConnectToExistingBrowser(): Promise<Browser | null> {
+  try {
+    // Tenta conectar ao Chrome na porta 9222
+    const browser = await puppeteer.connect({
+      browserURL: 'http://localhost:9222',
+      defaultViewport: DEFAULT_VIEWPORT,
+    });
+    
+    console.log('✅ Conectado ao Chrome existente na porta 9222');
+    return browser;
+  } catch (error) {
+    console.log('ℹ️ Nenhuma instância do Chrome encontrada, criando nova...');
+    return null;
+  }
+}
+
+/**
  * Garante que o browser está inicializado e atualiza lista de páginas
+ * 🆕 Com suporte a reconexão automática
  */
 async function ensureBrowser(): Promise<void> {
   if (!browser || !browser.isConnected()) {
-    browser = await puppeteer.launch(BROWSER_CONFIG);
+    // 🆕 Primeira tentativa: conectar ao Chrome existente
+    browser = await tryConnectToExistingBrowser();
+    
+    // Se não conseguiu conectar, cria nova instância
+    if (!browser) {
+      browser = await puppeteer.launch(BROWSER_CONFIG);
+      console.log('🚀 Nova instância do Chrome iniciada na porta 9222');
+    }
 
     browser.on('disconnected', () => {
+      console.log('⚠️ Chrome desconectado, tentará reconectar na próxima operação');
       browser = null;
       page = null;
       pages = [];
@@ -141,17 +190,33 @@ async function ensureBrowser(): Promise<void> {
 }
 
 /**
- * Fecha o browser após inatividade
+ * 🆕 Função de cleanup modificada para página persistente
+ * Agora apenas monitora, não fecha automaticamente
  */
 export function startBrowserCleanup() {
   setInterval(async () => {
     if (browser && Date.now() - lastActivity > BROWSER_TIMEOUT) {
-      await browser.close();
-      browser = null;
-      page = null;
-      pages = [];
+      console.log('ℹ️ Chrome inativo há 24h, mas mantendo aberto (página persistente)');
+      // 🆕 NÃO fecha o browser automaticamente
+      // await browser.close(); // ❌ Removido
+      // browser = null;        // ❌ Removido  
+      // page = null;           // ❌ Removido
+      // pages = [];            // ❌ Removido
     }
   }, 60000);
+}
+
+/**
+ * 🆕 Função para fechar manualmente o Chrome persistente (quando necessário)
+ */
+export async function closePersistentBrowser(): Promise<void> {
+  if (browser) {
+    await browser.close();
+    browser = null;
+    page = null;
+    pages = [];
+    console.log('🔴 Chrome persistente fechado manualmente');
+  }
 }
 
 // ================== HANDLERS - BÁSICOS ==================
@@ -596,8 +661,11 @@ export async function handleCloseTab(params: { tabIndex?: number } = {}) {
 
 export async function handleDuplicateTab() {
   await ensureBrowser();
-  if (!browser || !page)
-    throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Browser/página não inicializada');
+  if (!browser)
+    throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Browser não inicializado');
+
+  if (!page)
+    throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Página não inicializada');
 
   const currentUrl = page.url();
   const newPage = await browser.newPage();
@@ -605,14 +673,59 @@ export async function handleDuplicateTab() {
   await newPage.goto(currentUrl, { waitUntil: 'networkidle2' });
   await newPage.bringToFront();
 
-  // Atualiza página atual e lista
-  page = newPage;
+  // Atualiza lista de páginas
   pages = await browser.pages();
+  page = newPage;
 
   return successResponse(
-    { originalUrl: currentUrl, newTabIndex: pages.length - 1 },
+    { url: currentUrl, tabIndex: pages.length - 1 },
     `Aba duplicada: ${currentUrl}`,
   );
+}
+
+// 🆕 HANDLER PARA GERENCIAR CHROME PERSISTENTE
+
+export async function handleClosePersistentBrowser() {
+  await closePersistentBrowser();
+  
+  return successResponse(
+    { action: 'browser_closed' },
+    'Chrome persistente fechado manualmente',
+  );
+}
+
+export async function handleGetBrowserStatus() {
+  const isConnected = browser?.isConnected() ?? false;
+  const totalPages = pages.length;
+  const currentUrl = page?.url() ?? 'Nenhuma página ativa';
+  const uptime = Date.now() - lastActivity;
+  
+  return successResponse(
+    { 
+      connected: isConnected,
+      totalPages,
+      currentUrl,
+      uptimeMs: uptime,
+      uptimeFormatted: formatUptime(uptime),
+      persistentMode: true,
+    },
+    `Chrome ${isConnected ? 'conectado' : 'desconectado'} - ${totalPages} abas abertas`,
+  );
+}
+
+/**
+ * 🆕 Formatar tempo de atividade
+ */
+function formatUptime(ms: number): string {
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  
+  if (days > 0) return `${days}d ${hours % 24}h ${minutes % 60}m`;
+  if (hours > 0) return `${hours}h ${minutes % 60}m`;
+  if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+  return `${seconds}s`;
 }
 
 // ================== METADADOS DAS FERRAMENTAS ==================
@@ -838,6 +951,16 @@ export const puppeteerTools = [
   {
     name: 'puppeteer_duplicate_tab',
     description: 'Duplicate the current tab',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'puppeteer_close_persistent_browser',
+    description: 'Close the persistent browser',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'puppeteer_get_browser_status',
+    description: 'Get the status of the persistent browser',
     inputSchema: { type: 'object', properties: {} },
   },
 ];

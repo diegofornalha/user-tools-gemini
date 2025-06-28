@@ -1,0 +1,296 @@
+[
+  {
+    "id": "acessar-login-ekyte",
+    "name": "Acessar Login Ekyte",
+    "description": "Navegar até a página de login e verificar elementos",
+    "category": "navegação",
+    "difficulty": "básico",
+    "learned": false,
+    "attempts": 5,
+    "successCount": 0,
+    "lastAttempt": "2025-06-28T04:00:40.972Z",
+    "evidence": [],
+    "selectors": [],
+    "actions": [
+      {
+        "type": "navigate",
+        "url": "",
+        "description": "Navegar para URL do Ekyte"
+      },
+      {
+        "type": "screenshot",
+        "filename": "login-page",
+        "description": "Capturar tela do login"
+      },
+      {
+        "type": "wait",
+        "selector": "input[type=\"email\"], input[name=\"email\"]",
+        "timeout": 5000,
+        "description": "Aguardar campo de email"
+      }
+    ],
+    "confidence": 0,
+    "metadata": {}
+  },
+  {
+    "id": "realizar-login",
+    "name": "Realizar Login",
+    "description": "Fazer login no sistema com credenciais",
+    "category": "navegação",
+    "difficulty": "intermediário",
+    "learned": false,
+    "attempts": 0,
+    "successCount": 0,
+    "lastAttempt": "2025-06-28T03:44:26.251Z",
+    "evidence": [],
+    "selectors": [],
+    "actions": [
+      {
+        "type": "fill",
+        "selector": "input[type=\"email\"], input[name=\"email\"]",
+        "description": "Preencher email"
+      },
+      {
+        "type": "fill",
+        "selector": "input[type=\"password\"], input[name=\"password\"]",
+        "description": "Preencher senha"
+      },
+      {
+        "type": "click",
+        "selector": "button[type=\"submit\"], input[type=\"submit\"], .login-btn",
+        "description": "Clicar em entrar"
+      },
+      {
+        "type": "wait",
+        "timeout": 3000,
+        "description": "Aguardar redirecionamento"
+      },
+      {
+        "type": "screenshot",
+        "filename": "after-login",
+        "description": "Capturar tela pós-login"
+      }
+    ],
+    "confidence": 0,
+    "metadata": {}
+  },
+  {
+    "id": "explorar-dashboard",
+    "name": "Explorar Dashboard",
+    "description": "Identificar elementos principais do dashboard",
+    "category": "interface",
+    "difficulty": "básico",
+    "learned": false,
+    "attempts": 0,
+    "successCount": 0,
+    "lastAttempt": "2025-06-28T03:44:26.252Z",
+    "evidence": [],
+    "selectors": [],
+    "actions": [
+      {
+        "type": "extract",
+        "extractField": "title",
+        "description": "Obter título da página"
+      },
+      {
+        "type": "extract",
+        "extractField": "url",
+        "description": "Obter URL atual"
+      },
+      {
+        "type": "screenshot",
+        "filename": "dashboard",
+        "description": "Capturar dashboard"
+      }
+    ],
+    "confidence": 0,
+    "metadata": {}
+  },
+  {
+    "id": "identificar-menu-principal",
+    "name": "Identificar Menu Principal",
+    "description": "Localizar e mapear itens do menu de navegação",
+    "category": "interface",
+    "difficulty": "intermediário",
+    "learned": false,
+    "attempts": 0,
+    "successCount": 0,
+    "lastAttempt": "2025-06-28T03:44:26.252Z",
+    "evidence": [],
+    "selectors": [],
+    "actions": [
+      {
+        "type": "extract",
+        "selector": "nav, .menu, .sidebar",
+        "extractField": "text",
+        "description": "Extrair texto do menu"
+      },
+      {
+        "type": "hover",
+        "selector": "nav a, .menu a",
+        "description": "Hover sobre itens do menu"
+      },
+      {
+        "type": "screenshot",
+        "filename": "menu-hover",
+        "description": "Capturar menu em hover"
+      }
+    ],
+    "confidence": 0,
+    "metadata": {}
+  },
+  {
+    "id": "acessar-lista-de-tarefas",
+    "name": "Acessar Lista de Tarefas",
+    "description": "Navegar para a seção de tarefas",
+    "category": "tarefas",
+    "difficulty": "básico",
+    "learned": false,
+    "attempts": 0,
+    "successCount": 0,
+    "lastAttempt": "2025-06-28T03:44:26.253Z",
+    "evidence": [],
+    "selectors": [],
+    "actions": [
+      {
+        "type": "click",
+        "selector": "a[href*=\"task\"], a[href*=\"tarefa\"], .tasks-link",
+        "description": "Clicar em link de tarefas"
+      },
+      {
+        "type": "wait",
+        "timeout": 2000,
+        "description": "Aguardar carregamento"
+      },
+      {
+        "type": "screenshot",
+        "filename": "tasks-list",
+        "description": "Capturar lista de tarefas"
+      }
+    ],
+    "confidence": 0,
+    "metadata": {}
+  },
+  {
+    "id": "criar-nova-tarefa",
+    "name": "Criar Nova Tarefa",
+    "description": "Processo completo de criação de tarefa",
+    "category": "tarefas",
+    "difficulty": "avançado",
+    "learned": false,
+    "attempts": 0,
+    "successCount": 0,
+    "lastAttempt": "2025-06-28T03:44:26.253Z",
+    "evidence": [],
+    "selectors": [],
+    "actions": [
+      {
+        "type": "click",
+        "selector": ".new-task, .add-task, button[title*=\"Nova\"], button[title*=\"Criar\"]",
+        "description": "Clicar em nova tarefa"
+      },
+      {
+        "type": "wait",
+        "selector": "input[name*=\"title\"], input[name*=\"nome\"]",
+        "timeout": 3000,
+        "description": "Aguardar formulário"
+      },
+      {
+        "type": "fill",
+        "selector": "input[name*=\"title\"], input[name*=\"nome\"]",
+        "text": "Tarefa Teste",
+        "description": "Preencher título"
+      },
+      {
+        "type": "fill",
+        "selector": "textarea[name*=\"description\"], textarea[name*=\"desc\"]",
+        "text": "Descrição automática",
+        "description": "Preencher descrição"
+      },
+      {
+        "type": "screenshot",
+        "filename": "new-task-form",
+        "description": "Capturar formulário preenchido"
+      }
+    ],
+    "confidence": 0,
+    "metadata": {}
+  },
+  {
+    "id": "extrair-dados-da-tabela",
+    "name": "Extrair Dados da Tabela",
+    "description": "Capturar informações tabulares",
+    "category": "dados",
+    "difficulty": "intermediário",
+    "learned": false,
+    "attempts": 0,
+    "successCount": 0,
+    "lastAttempt": "2025-06-28T03:44:26.253Z",
+    "evidence": [],
+    "selectors": [],
+    "actions": [
+      {
+        "type": "extract",
+        "selector": "table",
+        "extractField": "text",
+        "description": "Extrair texto da tabela"
+      },
+      {
+        "type": "extract",
+        "selector": "table th",
+        "extractField": "text",
+        "description": "Extrair cabeçalhos"
+      },
+      {
+        "type": "screenshot",
+        "filename": "data-table",
+        "description": "Capturar tabela"
+      }
+    ],
+    "confidence": 0,
+    "metadata": {}
+  },
+  {
+    "id": "aplicar-filtros",
+    "name": "Aplicar Filtros",
+    "description": "Usar sistema de filtros para refinar resultados",
+    "category": "filtros",
+    "difficulty": "intermediário",
+    "learned": false,
+    "attempts": 0,
+    "successCount": 0,
+    "lastAttempt": "2025-06-28T03:44:26.254Z",
+    "evidence": [],
+    "selectors": [],
+    "actions": [
+      {
+        "type": "click",
+        "selector": ".filter, .filtro, [data-filter]",
+        "description": "Abrir filtros"
+      },
+      {
+        "type": "select",
+        "selector": "select[name*=\"status\"]",
+        "text": "Ativo",
+        "description": "Selecionar status"
+      },
+      {
+        "type": "click",
+        "selector": ".apply-filter, .aplicar",
+        "description": "Aplicar filtros"
+      },
+      {
+        "type": "wait",
+        "timeout": 2000,
+        "description": "Aguardar resultados"
+      },
+      {
+        "type": "screenshot",
+        "filename": "filtered-results",
+        "description": "Capturar resultados filtrados"
+      }
+    ],
+    "confidence": 0,
+    "metadata": {}
+  }
+]
