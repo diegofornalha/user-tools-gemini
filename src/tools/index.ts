@@ -17,7 +17,12 @@ export {
   handleScreenshot,
   handleClick,
   handleType,
+  handleFill,
+  handleSelect,
+  handleHover,
+  handleEvaluate,
   handleGetContent,
+  handleNewTab,
   startBrowserCleanup,
 } from './puppeteer/index.js';
 
@@ -32,7 +37,12 @@ import {
   handleScreenshot,
   handleClick,
   handleType,
+  handleFill,
+  handleSelect,
+  handleHover,
+  handleEvaluate,
   handleGetContent,
+  handleNewTab,
 } from './puppeteer/index.js';
 
 export const toolHandlers = {
@@ -41,5 +51,10 @@ export const toolHandlers = {
   puppeteer_screenshot: handleScreenshot,
   puppeteer_click: handleClick,
   puppeteer_type: handleType,
+  puppeteer_fill: handleFill,
+  puppeteer_select: handleSelect,
+  puppeteer_hover: handleHover,
+  puppeteer_evaluate: handleEvaluate,
   puppeteer_get_content: handleGetContent,
+  puppeteer_new_tab: handleNewTab,
 } as const;

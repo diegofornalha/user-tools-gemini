@@ -42,6 +42,25 @@ export const TypeSchema = z.object({
   text: z.string(),
 });
 
+// 🆕 Novos Schemas para ferramentas da imagem
+export const FillSchema = z.object({
+  selector: z.string().min(1, 'Seletor CSS é obrigatório'),
+  value: z.string(),
+});
+
+export const SelectSchema = z.object({
+  selector: z.string().min(1, 'Seletor CSS é obrigatório'),
+  value: z.string().min(1, 'Valor para selecionar é obrigatório'),
+});
+
+export const HoverSchema = z.object({
+  selector: z.string().min(1, 'Seletor CSS é obrigatório'),
+});
+
+export const EvaluateSchema = z.object({
+  script: z.string().min(1, 'Script JavaScript é obrigatório'),
+});
+
 // Estado do browser
 let browser: Browser | null = null;
 let page: Page | null = null;
@@ -92,7 +111,7 @@ export function startBrowserCleanup() {
   }, 60000); // Verifica a cada minuto
 }
 
-// Handlers das ferramentas
+// Handlers das ferramentas existentes
 export async function handleNavigate(params: NavigateParams) {
   const validated = NavigateSchema.parse(params);
 
@@ -168,7 +187,6 @@ export async function handleGetContent() {
   return successResponse({ content }, 'Conteúdo HTML obtido com sucesso');
 }
 
-// Nova função para abrir URL em nova aba
 export async function handleNewTab(params: NavigateParams) {
   const validated = NavigateSchema.parse(params);
 
@@ -190,7 +208,70 @@ export async function handleNewTab(params: NavigateParams) {
   );
 }
 
-// Metadados das ferramentas Puppeteer
+// 🆕 Novos Handlers para ferramentas da imagem
+export async function handleFill(params: { selector: string; value: string }) {
+  const validated = FillSchema.parse(params);
+
+  await ensureBrowser();
+  if (!page)
+    throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Página não inicializada');
+
+  // Limpa campo antes de preencher
+  await page.click(validated.selector, { clickCount: 3 });
+  await page.type(validated.selector, validated.value);
+
+  return successResponse(
+    { selector: validated.selector, value: validated.value },
+    `Campo preenchido: ${validated.selector} = "${validated.value}"`,
+  );
+}
+
+export async function handleSelect(params: { selector: string; value: string }) {
+  const validated = SelectSchema.parse(params);
+
+  await ensureBrowser();
+  if (!page)
+    throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Página não inicializada');
+
+  await page.select(validated.selector, validated.value);
+
+  return successResponse(
+    { selector: validated.selector, value: validated.value },
+    `Opção selecionada: ${validated.selector} = "${validated.value}"`,
+  );
+}
+
+export async function handleHover(params: { selector: string }) {
+  const validated = HoverSchema.parse(params);
+
+  await ensureBrowser();
+  if (!page)
+    throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Página não inicializada');
+
+  await page.hover(validated.selector);
+
+  return successResponse(
+    { selector: validated.selector },
+    `Hover realizado no elemento: ${validated.selector}`,
+  );
+}
+
+export async function handleEvaluate(params: { script: string }) {
+  const validated = EvaluateSchema.parse(params);
+
+  await ensureBrowser();
+  if (!page)
+    throw new MCPError(ErrorCode.PAGE_LOAD_FAILED, 'Página não inicializada');
+
+  const result = await page.evaluate(validated.script);
+
+  return successResponse(
+    { script: validated.script, result },
+    `JavaScript executado com sucesso`,
+  );
+}
+
+// Metadados das ferramentas Puppeteer - Expandido
 export const puppeteerTools = [
   {
     name: 'puppeteer_navigate',
@@ -243,6 +324,56 @@ export const puppeteerTools = [
         text: { type: 'string', description: 'Text to type' },
       },
       required: ['selector', 'text'],
+    },
+  },
+  // 🆕 Nova ferramenta: Fill
+  {
+    name: 'puppeteer_fill',
+    description: 'Fill an input field (clears first then types)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        selector: { type: 'string', description: 'CSS selector of input field' },
+        value: { type: 'string', description: 'Value to fill' },
+      },
+      required: ['selector', 'value'],
+    },
+  },
+  // 🆕 Nova ferramenta: Select
+  {
+    name: 'puppeteer_select',
+    description: 'Select an option from a dropdown',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        selector: { type: 'string', description: 'CSS selector of select element' },
+        value: { type: 'string', description: 'Value to select' },
+      },
+      required: ['selector', 'value'],
+    },
+  },
+  // 🆕 Nova ferramenta: Hover
+  {
+    name: 'puppeteer_hover',
+    description: 'Hover over an element',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        selector: { type: 'string', description: 'CSS selector of element to hover' },
+      },
+      required: ['selector'],
+    },
+  },
+  // 🆕 Nova ferramenta: Evaluate
+  {
+    name: 'puppeteer_evaluate',
+    description: 'Execute JavaScript code in the page context',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        script: { type: 'string', description: 'JavaScript code to execute' },
+      },
+      required: ['script'],
     },
   },
   {
